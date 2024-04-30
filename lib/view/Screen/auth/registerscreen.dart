@@ -65,6 +65,9 @@ class _RegisterState extends State<Register> {
                         fontSize: 24),
                   ),
                 ),
+                SizedBox(
+                  height: 10,
+                ),
                 Padding(
                   padding: EdgeInsets.only(
                       left: MediaQuery.of(context).size.width * 0.08),
@@ -400,14 +403,18 @@ class _RegisterState extends State<Register> {
                                           context: context,
                                           builder: (BuildContext context) =>
                                               AlertDialog(
-                                                backgroundColor: Colors.red,
-                                            title: Text("Error!" ,style: TextStyle(
-                                                fontFamily: 'NiraBold',
-                                                fontSize: 16),),
+                                            backgroundColor: Colors.red,
+                                            title: Text(
+                                              "Warning!",
+                                              style: TextStyle(
+                                                  fontFamily: 'NiraBold',
+                                                  color: Colors.white,
+                                                  fontSize: 20),
+                                            ),
                                             content: Text(
                                               "This Email Address is already registered.",
                                               style: TextStyle(
-
+                                                  color: Colors.white,
                                                   fontFamily: 'NiraRegular',
                                                   fontSize: 16),
                                             ),
@@ -416,7 +423,13 @@ class _RegisterState extends State<Register> {
                                                 onPressed: () {
                                                   Navigator.pop(context);
                                                 },
-                                                child: Text("OK"),
+                                                child: Text(
+                                                  "OK",
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontFamily: 'NiraBold',
+                                                      fontSize: 16),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -484,16 +497,18 @@ class _RegisterState extends State<Register> {
                                       MaterialPageRoute(
                                         builder: (context) => LoginScreen(),
                                       ),
-                                    );
+                                    ); // Go back to the previous screen (LoginScreen)
                                   },
                                   child: const Text(
                                     'Login',
                                     style: TextStyle(
-                                        color: Color(0xFFFFC839),
-                                        fontFamily: 'NiraBold',
-                                        fontSize: 14),
+                                      color: Color(0xFFFFC839),
+                                      fontFamily: 'NiraBold',
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
+
                               ],
                             ),
                             const SizedBox(

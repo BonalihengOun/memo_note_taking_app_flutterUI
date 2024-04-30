@@ -26,6 +26,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     super.initState();
     _startCountdown();
   }
+
   void _startCountdown() {
     if (!_isCountdownStarted) {
       _timerCountdown = TimerCountdown(
@@ -61,25 +62,11 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       _isCountdownStarted = true;
     }
   }
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-  //     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  //     authProvider.addListener(() {
-  //       if (authProvider.registrationSuccessful) {
-  //         setState(() {
-  //           _isCountdownStarted = true;
-  //         });
-  //       }
-  //     });
-  //   });
-  // }
 
   @override
   void dispose() {
-    _otpController.dispose();
     _timerCountdown.endTime;
+    _otpController.dispose();
     super.dispose();
   }
 
@@ -129,7 +116,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         Text(
                           '${widget.user.email}',
                           style: TextStyle(
-                              color: Color(0xFFFFC839),
+                            color: Color(0xFFFFC839),
                             fontFamily: 'NiraSemi',
                             fontSize: 14,
                           ),
@@ -186,11 +173,22 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               barrierDismissible: false,
                               builder: (BuildContext context) => Center(
                                 child: CircularProgressIndicator(),
-
                               ),
                             );
                             await Future.delayed(const Duration(seconds: 2));
                             Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) => AlertDialog(
+
+                                backgroundColor: Colors.green.shade200,
+                                title:  Text("Successfully"),
+                                content:  Text(
+                                    "Your Account have been Verify Successfully"),
+                              ),
+                            );
+                            await Future.delayed(const Duration(seconds: 1));
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -234,7 +232,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 12,),
+                    SizedBox(
+                      height: 12,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -245,6 +245,22 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               fontFamily: 'NiraSemi',
                               fontSize: 14),
                         ),
+                        if (_isCountdownStarted)
+                          TimerCountdown(
+                            spacerWidth: 1,
+                            enableDescriptions: false,
+                            format: CountDownTimerFormat.minutesSeconds,
+                            endTime: DateTime.now().add(Duration(minutes: 2)),
+                            timeTextStyle: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'NiraSemi',
+                              fontSize: 14,
+                            ),
+                            onEnd: () {
+                              _isCountdownStarted = false;
+                              _startCountdown();
+                            },
+                          ),
                         TextButton(
                           onPressed: () async {
                             if (widget.user.email != null) {
@@ -254,28 +270,29 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               try {
                                 await authProvider.resendOTP(
                                     widget.user.email!, context);
-                                // Show success dialog
-                                if (_isCountdownStarted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) => AlertDialog(
-                                      backgroundColor: Colors.green[300],
-                                      title: Text("Success"),
-                                      content: Text('OTP has been resent successfully!!'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("OK"),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  // Restart countdown
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                    backgroundColor: Colors.green[300],
+                                    title: Text("Success"),
+                                    content: Text(
+                                        'OTP has been resent successfully!!'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("OK"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                // Restart countdown
+                                setState(() {
                                   _isCountdownStarted = false;
-                                  _startCountdown();
-                                }
+                                });
+                                _startCountdown();
                               } catch (error) {
                                 print(error);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -292,17 +309,20 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                             }
                           },
                           child: _isResendingOTP
-                              ? CircularProgressIndicator(color: Colors.white,strokeAlign: CircularProgressIndicator.strokeAlignCenter,)
+                              ? CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeAlign: CircularProgressIndicator
+                                      .strokeAlignCenter,
+                                )
                               : Text(
-                            'Resend OTP',
-                            style: TextStyle(
-                              color: Color(0xFFFFC839),
-                              fontFamily: 'NiraBold',
-                              fontSize: 14,
-                            ),
-                          ),
+                                  'Resend OTP',
+                                  style: TextStyle(
+                                    color: Color(0xFFFFC839),
+                                    fontFamily: 'NiraBold',
+                                    fontSize: 14,
+                                  ),
+                                ),
                         ),
-
                       ],
                     ),
                     if (authProvider.isLoading)
