@@ -383,71 +383,88 @@ class _RegisterState extends State<Register> {
                                     try {
                                       final isEmailRegistered =
                                           await registerProvider
-                                              .isEmailRegistered(
+                                              .isEmailregistered(
                                                   _emailController.text);
 
-                                      if (isEmailRegistered) {
+                                      if (!isEmailRegistered) {
+                                        registerProvider.isLoading = true;
+                                        await registerProvider.registerUser(
+                                            user, context);
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) =>
+                                              AlertDialog(
+                                                backgroundColor: Colors
+                                                    .transparent, // Set transparent background
+                                                contentPadding: EdgeInsets.zero,
+                                                content: Container(
+                                                  width: 200,
+                                                  height: 200,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(
+                                                        10), // Optional: Add border radius
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Container(
+                                                          width: 250,
+                                                          height: 200,
+                                                          child: Column(
+                                                            children: [
+                                                              Padding(
+                                                                padding: const EdgeInsets.all(8.0),
+                                                                child: Image.asset('lib/assets/check.png',width: 60,height: 60,),
+                                                              ),
+                                                              Text('Successfull',style: TextStyle(fontFamily: 'NiraBold',fontSize: 20,color: Colors.amber),),
+                                                              SizedBox(height: 10),
+                                                              Center(child: Text('Your account has been created!!!',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.grey),)),
+                                                              Text('Please check your email to activate your account',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 12,color: Colors.grey.shade500),),
+                                                            ],
+                                                          ),
+                                                          decoration: BoxDecoration(
+                                                            borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    20)),
+                                                            color: Colors.white,
+                                                          ),
+
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                        );
+                                        Navigator.pop(context);
+                                        registerProvider.isLoading = false;
+                                      } else {
                                         showDialog(
                                           context: context,
                                           barrierDismissible:
                                               false, // Prevent dialog from being dismissed
                                           builder: (BuildContext context) =>
                                               Center(
-                                            child: CircularProgressIndicator(),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 5,
+                                              strokeCap: StrokeCap
+                                                  .round, // Adjust the strokeWidth to control the radius
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Colors.white),
+                                              semanticsLabel: 'Loading',
+                                              semanticsValue: '20%',
+                                            ),
                                           ),
                                         );
                                         await Future.delayed(
                                             const Duration(seconds: 2));
                                         Navigator.pop(context);
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              AlertDialog(
-                                            backgroundColor: Colors.red,
-                                            title: Text(
-                                              "Warning!",
-                                              style: TextStyle(
-                                                  fontFamily: 'NiraBold',
-                                                  color: Colors.white,
-                                                  fontSize: 20),
-                                            ),
-                                            content: Text(
-                                              "This Email Address is already registered.",
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily: 'NiraRegular',
-                                                  fontSize: 16),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text(
-                                                  "OK",
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontFamily: 'NiraBold',
-                                                      fontSize: 16),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      } else {
-                                        registerProvider.isLoading = true;
-                                        showDialog(
-                                          context: context,
-                                          barrierDismissible: false,
-                                          builder: (BuildContext context) =>
-                                              Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        );
+                                        showCustomAlertDialog(context, 'Warning', 'Email already registered!!!','Please use a different email.', imagePath: 'lib/assets/warning.png');
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
                                         Navigator.pop(context);
-                                        await registerProvider.registerUser(
-                                            user, context);
-                                        registerProvider.isLoading = false;
                                       }
                                     } catch (error) {
                                       print(error);
@@ -508,14 +525,23 @@ class _RegisterState extends State<Register> {
                                     ),
                                   ),
                                 ),
-
                               ],
                             ),
                             const SizedBox(
                               height: 20,
                             ),
                             if (registerProvider.isLoading)
-                              Center(child: CircularProgressIndicator()),
+                              Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 5,
+                                  strokeCap: StrokeCap
+                                      .round, // Adjust the strokeWidth to control the radius
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                  semanticsLabel: 'Loading',
+                                  semanticsValue: '20%',
+                                ),
+                              ),
                             if (registerProvider.errorMessage != null)
                               Text(
                                 registerProvider.errorMessage!,
@@ -534,4 +560,70 @@ class _RegisterState extends State<Register> {
       ),
     );
   }
+}
+
+void showLoadingDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // Prevent dialog from being dismissed
+    builder: (BuildContext context) => AlertDialog(
+      content: Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 5,
+          strokeCap: StrokeCap.round,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          semanticsLabel: 'Loading',
+          semanticsValue: '20%',
+        ),
+      ),
+    ),
+  );
+}
+
+void showCustomAlertDialog(BuildContext context, String title, String message, String description, {String? imagePath}) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      backgroundColor: Colors.transparent, // Set transparent background
+      contentPadding: EdgeInsets.zero,
+      content: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10), // Optional: Add border radius
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                width: 250,
+                height: 200,
+                child: Column(
+                  children: [
+                    if (imagePath != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(imagePath, width: 60, height: 60),
+                      ),
+                    Text(
+                      title,
+                      style: TextStyle(fontFamily: 'NiraBold', fontSize: 20, color: Colors.amber),
+                    ),
+                    SizedBox(height: 10),
+                    Center(child: Text(message, style: TextStyle(fontFamily: 'NiraRegular', fontSize: 14, color: Colors.black54))),
+                    SizedBox(height: 5,),
+                    Text(description, style: TextStyle(fontFamily: 'NiraRegular', fontSize: 12, color: Colors.black54)),
+                  ],
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

@@ -1,23 +1,15 @@
-class FilesImgVideo {
+class ReceiveFile {
   final int fileId;
   final String receiveFiles;
 
-  FilesImgVideo({
-    required this.fileId,
-    required this.receiveFiles,
-  });
+  ReceiveFile({required this.fileId, required this.receiveFiles});
 
-  factory FilesImgVideo.fromJson(Map<String, dynamic> json) {
-    return FilesImgVideo(
-      fileId: json['fileId'] as int,
-      receiveFiles: json['receiveFiles'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'fileId': fileId,
-      'receiveFiles': receiveFiles,
-    };
-  }
+  factory ReceiveFile.fromJson(Map<String, dynamic> json) => ReceiveFile(
+    fileId: json["fileId"],
+    receiveFiles: json["receiveFiles"],
+  );
+  Map<String, dynamic> toJson() => {
+    "fileId": fileId,
+    "receiveFiles": receiveFiles,
+  };
 }

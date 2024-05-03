@@ -1,25 +1,24 @@
-
-import 'package:memo_note_app/model/FilesImgVideo.dart';
 import 'package:memo_note_app/model/tag.dart';
 import 'package:memo_note_app/model/userResponse.dart';
 
-class NotePaper {
-  final int notedId;
+import 'filesImgVideo.dart';
+
+class Notepaper {
+  final int noteId; // Change 'notedId' to 'noteId'
   final String title;
-  final String noteContent;
-  final String noteDescription;
+  final String note_content; // Change 'noteContent' to 'note_content'
+  final String note_description; // Change 'noteDescription' to 'note_description'
   final DateTime creationDate;
   final String selectColor;
-  final List<Tag> tagsLists;
-  final List<FilesImgVideo> receiveFiles;
+  final List<Tag>? tagsLists;
+  final List<ReceiveFile>? receiveFiles;
   final UserResponse users;
 
-
-   NotePaper({
-    required this.notedId,
+  Notepaper({
+    required this.noteId,
     required this.title,
-    required this.noteContent,
-    required this.noteDescription,
+    required this.note_content,
+    required this.note_description,
     required this.creationDate,
     required this.selectColor,
     required this.tagsLists,
@@ -27,38 +26,17 @@ class NotePaper {
     required this.users,
   });
 
-  factory NotePaper.fromJson(Map<String, dynamic> json) {
-    return NotePaper(
-      notedId: json['notedId'] as int,
-      title: json['title'] as String,
-      noteContent: json['noteContent'] as String,
-      noteDescription: json['noteDescription'] as String,
-      creationDate: DateTime.parse(json['creationDate'] as String),
-      selectColor: json['selectColor'] as String,
-      tagsLists: (json['tagsLists'] as List<dynamic>)
-          .map((tagJson) => Tag.fromJson(tagJson as Map<String, dynamic>))
-          .toList(),
-      receiveFiles: (json['receiveFiles'] as List<dynamic>)
-          .map((fileJson) =>
-              FilesImgVideo.fromJson(fileJson as Map<String, dynamic>))
-          .toList(),
-      users: UserResponse.fromJson(json['users'] as Map<String, dynamic>),
+  factory Notepaper.fromJson(Map<String, dynamic> json) {
+    return Notepaper(
+      noteId: json['notedId'],
+      title: json['title'],
+      note_content: json['note_content'],
+      note_description: json['note_description'],
+      creationDate: DateTime.parse(json['creationDate']),
+      selectColor: json['selectColor'],
+      tagsLists: List<Tag>.from((json['tagsLists'] ?? []).map((tagJson) => Tag.fromJson(tagJson))),
+      receiveFiles: List<ReceiveFile>.from(json['receiveFiles'].map((fileJson) => ReceiveFile.fromJson(fileJson))),
+      users: UserResponse.fromJson(json['users']),
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'notedId': notedId,
-      'title': title,
-      'noteContent': noteContent,
-      'noteDescription': noteDescription,
-      'creationDate': creationDate.toIso8601String(),
-      'selectColor': selectColor,
-      'tagsLists': tagsLists.map((tag) => tag.toJson()).toList(),
-      'receiveFiles': receiveFiles.map((file) => file.toJson()).toList(),
-      'users': users.toJson(),
-    };
-  }
 }
-
-

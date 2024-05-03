@@ -239,9 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   fixedSize: Size(
-                                      MediaQuery.of(context).size.width * 0.88,
-                                      MediaQuery.of(context).size.height *
-                                          0.054),
+                                    MediaQuery.of(context).size.width * 0.88,
+                                    MediaQuery.of(context).size.height * 0.054,
+                                  ),
                                   backgroundColor: Colors.white,
                                 ),
                                 onPressed: () async {
@@ -256,124 +256,92 @@ class _LoginScreenState extends State<LoginScreen> {
                                         barrierDismissible: false,
                                         builder: (BuildContext context) =>
                                             Center(
-                                          child: CircularProgressIndicator(),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 5,
+                                            strokeCap: StrokeCap.round,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                            semanticsLabel: 'Loading',
+                                            semanticsValue: '20%',
+                                          ),
                                         ),
                                       );
 
                                       try {
-                                        final isEmailRegisteredResult =
+                                        final isEmailRegistered =
                                             await loginAuthProvider
-                                                .isEmailRegistered(email);
+                                                .isEmailregistered(email);
 
-                                        if (isEmailRegisteredResult) {
-                                          await Future.delayed(const Duration(
-                                              seconds:
-                                                  2)); // Show the circular progress indicator for 2 seconds
-                                          Navigator.pop(
-                                              context); // Dismiss the circular progress indicator
-                                          showDialog(
-                                            context: context,
-                                            barrierDismissible: false,
-                                            builder: (BuildContext context) =>
-                                                AlertDialog(
-                                              backgroundColor:
-                                                  Colors.green.shade200,
-                                              title: const Text("Success"),
-                                              content: const Text(
-                                                  "Your account is logged in successfully."),
-                                            ),
+                                        if (!isEmailRegistered) {
+                                          await Future.delayed(
+                                              const Duration(seconds: 2));
+                                          Navigator.pop(context);
+                                          showCustomAlertDialog(
+                                            context,
+                                            'Warning',
+                                            'This Email is not registered!!!',
+                                            'Please use a different email.',
+                                            Colors.amber,
+                                            imagePath: 'lib/assets/warning.png',
                                           );
-                                          await Future.delayed(const Duration(
-                                              seconds:
-                                              2));
+                                          await Future.delayed(
+                                              const Duration(seconds: 2));
+                                          return; // Exit the function if email is not registered
+                                        }
+
+                                        final user = await loginAuthProvider
+                                            .getUserByEmailAndPassword(
+                                                email, password);
+                                        print("This is user: ${user}");
+                                        if (user == null) {
+                                          await Future.delayed(
+                                              const Duration(seconds: 2));
+                                          Navigator.pop(context);
+                                          showCustomAlertDialog(
+                                            context,
+                                            'Error',
+                                            'Email or password is incorrect',
+                                            'Please try again.',
+                                            Colors.red,
+                                            imagePath: 'lib/assets/cross.png',
+                                          );
+                                        } else {
+                                          await Future.delayed(
+                                              const Duration(seconds: 2));
+                                          Navigator.pop(context);
+                                          showCustomAlertDialog(
+                                            context,
+                                            'Success',
+                                            'Login Successful',
+                                            'You have successfully logged in.',
+                                            Colors.green.shade700,
+                                            imagePath: 'lib/assets/check.png',
+                                          );
+                                          await Future.delayed(
+                                              const Duration(seconds: 2));
                                           await loginAuthProvider.loginAcc(
                                               email, password, context);
-                                        } else {
-                                          Navigator.pop(
-                                              context); // Dismiss the circular progress indicator
-                                          showDialog(
-                                            context: context,
-                                            barrierDismissible: false,
-                                            builder: (BuildContext context) =>
-                                                AlertDialog(
-                                              backgroundColor: Colors.red,
-                                              title: Text(
-                                                "Warning!",
-                                                style: TextStyle(
-                                                  fontFamily: 'NiraBold',
-                                                  color: Colors.white,
-                                                  fontSize: 20,
-                                                ),
-                                              ),
-                                              content: Text(
-                                                "Your email address is not registered.",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily: 'NiraRegular',
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(context),
-                                                  child: Text(
-                                                    "OK",
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontFamily: 'NiraBold',
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
                                         }
                                       } catch (error) {
                                         print('Error during login: $error');
-                                        Navigator.pop(
-                                            context); // Dismiss the circular progress indicator
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              AlertDialog(
-                                            title: const Text('Error'),
-                                            content: Text(
-                                              "An error occurred during login: $error",
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () =>
-                                                    Navigator.of(context).pop(),
-                                                child: const Text('OK'),
-                                              ),
-                                            ],
-                                          ),
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
+                                        Navigator.pop(context);
+                                        showCustomAlertDialog(
+                                          context,
+                                          'Error',
+                                          'An error occurred during login',
+                                          'Please try again later.',
+                                          Colors.red,
+                                          imagePath: 'lib/assets/cross.png',
                                         );
                                       }
-                                    } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            AlertDialog(
-                                          title: const Text('Error'),
-                                          content: const Text(
-                                              'Please enter both email and password.'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
-                                              child: const Text('OK'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
                                     }
                                   }
                                 },
                                 child: const Text(
-                                  'Login ',
+                                  'Login',
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontFamily: 'NiraBold',
@@ -381,6 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -410,13 +379,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ],
                             ),
-                            if (loginAuthProvider.isLoading)
-                              Center(child: CircularProgressIndicator()),
-                            if (loginAuthProvider.errorMessage != null)
-                              Text(
-                                loginAuthProvider.errorMessage!,
-                                style: TextStyle(color: Colors.red),
-                              ),
+                            // if (loginAuthProvider.isLoading)
+                            //   Center(child: CircularProgressIndicator()),
+                            // if (loginAuthProvider.errorMessage != null)
+                            //   Text(
+                            //     loginAuthProvider.errorMessage!,
+                            //     style: TextStyle(color: Colors.red),
+                            //   ),
                           ],
                         ),
                       )
@@ -430,4 +399,69 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
+
+void showCustomAlertDialog(BuildContext context, String title, String message,
+    String description, Color? titleTextColor,
+    {String? imagePath}) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      backgroundColor: Colors.transparent, // Set transparent background
+      contentPadding: EdgeInsets.zero,
+      content: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius:
+              BorderRadius.circular(10), // Optional: Add border radius
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                width: 250,
+                height: 200,
+                child: Column(
+                  children: [
+                    if (imagePath != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(imagePath, width: 60, height: 60),
+                      ),
+                    Text(
+                      title,
+                      style: TextStyle(
+                          fontFamily: 'NiraBold',
+                          fontSize: 20,
+                          color: titleTextColor ?? Colors.amber),
+                    ),
+                    SizedBox(height: 10),
+                    Center(
+                        child: Text(message,
+                            style: TextStyle(
+                                fontFamily: 'NiraRegular',
+                                fontSize: 12,
+                                color: Colors.black54))),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text(description,
+                        style: TextStyle(
+                            fontFamily: 'NiraRegular',
+                            fontSize: 12,
+                            color: Colors.black54)),
+                  ],
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

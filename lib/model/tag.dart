@@ -5,25 +5,14 @@ class Tag {
   final String tagName;
   final UserResponse users;
 
-  Tag({
-    required this.tagId,
-    required this.tagName,
-    required this.users,
-  });
+  Tag({required this.tagId, required this.tagName, required this.users});
 
   factory Tag.fromJson(Map<String, dynamic> json) {
     return Tag(
-      tagId: json['tagId'] as int,
-      tagName: json['tagName'] as String,
-      users: UserResponse.fromJson(json['users'] as Map<String, dynamic>),
+      tagId: json['tag_Id'],
+      tagName: json['tagName'],
+      users: UserResponse.fromJson(json['users']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'tagId': tagId,
-      'tagName': tagName,
-      'users': users.toJson(),
-    };
-  }
 }

@@ -63,6 +63,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     }
   }
 
+  void _restartCountdown() {
+    setState(() {
+      _isCountdownStarted = false;
+    });
+    _startCountdown();
+  }
+
   @override
   void dispose() {
     _timerCountdown.endTime;
@@ -137,6 +144,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: Pinput(
+                        validator: (value) => value!.isEmpty ||
+                            value != _otpController.text
+                            ? 'Please Input OTP Code'
+                            : null,
                         animationCurve: Curves.bounceIn,
                         controller: _otpController,
                         keyboardType: TextInputType.number,
@@ -164,65 +175,176 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         fixedSize: const Size(335, 50),
                       ),
                       onPressed: () async {
-                        try {
-                          final isOTPCorrect = await authProvider.verifyOTP(
-                              _otpController.text, context);
-                          if (isOTPCorrect) {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) => Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                            await Future.delayed(const Duration(seconds: 2));
-                            Navigator.pop(context);
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) => AlertDialog(
-
-                                backgroundColor: Colors.green.shade200,
-                                title:  Text("Successfully"),
-                                content:  Text(
-                                    "Your Account have been Verify Successfully"),
-                              ),
-                            );
-                            await Future.delayed(const Duration(seconds: 1));
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LoginScreen()),
-                            );
-                          } else {
-                            // Show error dialog
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) => AlertDialog(
-                                title: const Text("Warning!"),
-                                content: const Text(
-                                    "Invalid OTP or OTP is Expired. Please try again."),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("OK"),
+                        // Check if OTP code is not empty and matches the expected value
+                        if (_otpController.text.isNotEmpty) {
+                          try {
+                            final isOTPCorrect = await authProvider.verifyOTP(
+                                _otpController.text, context);
+                            if (isOTPCorrect) {
+                              // Show loading indicator while verifying OTP
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) => Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 5,
+                                    strokeCap: StrokeCap.round,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    semanticsLabel: 'Loading',
+                                    semanticsValue: '20%',
                                   ),
-                                ],
+                                ),
+                              );
+                              // Simulate verification process with a delay
+                              await Future.delayed(const Duration(seconds: 2));
+                              Navigator.pop(context); // Close loading indicator dialog
+                              // Show success dialog after successful verification
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    AlertDialog(
+                                      backgroundColor: Colors
+                                          .transparent, // Set transparent background
+                                      contentPadding: EdgeInsets.zero,
+                                      content: Container(
+                                        width: 200,
+                                        height: 200,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                              10), // Optional: Add border radius
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: Container(
+                                                width: 250,
+                                                height: 200,
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Image.asset('lib/assets/check.png',width: 60,height: 60,),
+                                                    ),
+                                                    Text('Successfull',style: TextStyle(fontFamily: 'NiraBold',fontSize: 20,color: Colors.green),),
+                                                    SizedBox(height: 10),
+                                                    Center(child: Text('Your account has been verify!!!',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.black54),)),
+                                                    SizedBox(height: 5),
+                                                    Text('Please login to continue',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 12,color: Colors.black54),),
+                                                  ],
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                  BorderRadius.all(
+                                                      Radius.circular(
+                                                          20)),
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('OK',style: TextStyle(fontFamily: 'NiraBold',fontSize: 16),),
+                                        )
+                                      ],
+                                    ),
+                              );
+                              await Future.delayed(const Duration(seconds: 1));
+                              Navigator.pop(context);
+                              // Navigate to login screen after successful verification
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                              );
+                            } else {
+                              // Show error dialog for invalid OTP or expired OTP
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) => Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 5,
+                                    strokeCap: StrokeCap.round,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    semanticsLabel: 'Loading',
+                                    semanticsValue: '20%',
+                                  ),
+                                ),
+                              );
+                              // Simulate verification process with a delay
+                              await Future.delayed(const Duration(seconds: 2));
+                              Navigator.pop(context);
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    AlertDialog(
+                                      backgroundColor: Colors
+                                          .transparent, // Set transparent background
+                                      contentPadding: EdgeInsets.zero,
+                                      content: Container(
+                                        width: 200,
+                                        height: 200,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                              10), // Optional: Add border radius
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: Container(
+                                                width: 250,
+                                                height: 200,
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Image.asset('lib/assets/warning.png',width: 60,height: 60,),
+                                                    ),
+                                                    Text('Warning',style: TextStyle(fontFamily: 'NiraBold',fontSize: 20,color: Colors.amber),),
+                                                    SizedBox(height: 10),
+                                                    Center(child: Text('Invalid OTP or Expired OTP!!!',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.black54),)),
+                                                    SizedBox(height: 5,),
+                                                    Text('Please try again',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 12,color: Colors.black54),),
+                                                  ],
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                  BorderRadius.all(
+                                                      Radius.circular(
+                                                          20)),
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                              );
+                              await Future.delayed(const Duration(seconds: 1));
+                              Navigator.pop(context);
+                            }
+                          } catch (error) {
+                            // Handle error during OTP verification
+                            if (kDebugMode) {
+                              print(error);
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'An error occurred during OTP verification.'),
                               ),
                             );
                           }
-                        } catch (error) {
-                          if (kDebugMode) {
-                            print(error);
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'An error occurred during OTP verification.'),
-                            ),
-                          );
                         }
                       },
+
                       child: const Text(
                         'Verify',
                         style: TextStyle(
@@ -257,8 +379,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               fontSize: 14,
                             ),
                             onEnd: () {
-                              _isCountdownStarted = false;
-                              _startCountdown();
+                              setState(() {
+                                _isCountdownStarted = false;
+                              });
                             },
                           ),
                         TextButton(
@@ -270,35 +393,65 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               try {
                                 await authProvider.resendOTP(
                                     widget.user.email!, context);
+                                if (!_isCountdownStarted) {
+                                  _restartCountdown(); // Restart the countdown timer if it has ended
+                                }
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) =>
                                       AlertDialog(
-                                    backgroundColor: Colors.green[300],
-                                    title: Text("Success"),
-                                    content: Text(
-                                        'OTP has been resent successfully!!'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("OK"),
+                                        backgroundColor: Colors
+                                            .transparent, // Set transparent background
+                                        contentPadding: EdgeInsets.zero,
+                                        content: Container(
+                                          width: 200,
+                                          height: 200,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                                10), // Optional: Add border radius
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                  width: 250,
+                                                  height: 200,
+                                                  child: Column(
+                                                    children: [
+                                                      Padding(
+                                                        padding: const EdgeInsets.all(10.0),
+                                                        child: Image.asset('lib/assets/check.png',width: 60,height: 60,),
+                                                      ),
+                                                      Text('Successfull',style: TextStyle(fontFamily: 'NiraBold',fontSize: 20,color: Colors.green),),
+                                                      SizedBox(height: 10),
+                                                      Center(child: Text('Resent OTP successfully',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.black45),)),
+                                                      SizedBox(height: 5,),
+                                                      Text('Please check your email',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 12,color: Colors.black45),),
+                                                    ],
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                    BorderRadius.all(
+                                                        Radius.circular(
+                                                            20)),
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ],
-                                  ),
                                 );
-                                // Restart countdown
-                                setState(() {
-                                  _isCountdownStarted = false;
-                                });
-                                _startCountdown();
+                                await Future.delayed(const Duration(seconds: 1));
+                                Navigator.pop(context);
                               } catch (error) {
                                 print(error);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        'Failed to resend OTP. Please try again.'),
+                                      'Failed to resend OTP. Please try again.',
+                                    ),
                                   ),
                                 );
                               } finally {

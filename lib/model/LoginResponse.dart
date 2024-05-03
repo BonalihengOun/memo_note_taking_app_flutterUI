@@ -22,5 +22,4 @@ class LoginResponse {
 
   String? get accessToken => payload['accessToken'];
 
-// Add other fields or methods as needed
 }
