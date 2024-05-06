@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:memo_note_app/Provider/Authprovider.dart';
-import 'package:memo_note_app/Provider/NoteProvider.dart';
+import 'package:memo_note_app/Provider/Noteprovider.dart';
+import 'package:memo_note_app/Provider/Tagprovider.dart';
 import 'package:memo_note_app/model/User.dart';
 import 'package:memo_note_app/utils/share_preferrences.dart';
+import 'package:memo_note_app/view/Screen/Note_detail_screen.dart';
 import 'package:memo_note_app/view/Screen/auth/registerscreen.dart';
 import 'package:memo_note_app/view/Screen/Homepage.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +15,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (context) => NoteProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => TagProvider()),
       ],
       child: MyApp(),
     ),
@@ -39,12 +42,35 @@ class MyApp extends StatelessWidget {
           final bool isLoggedIn = snapshot.data!;
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Flutter Demo',
+            title: 'Memo Note App',
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: isLoggedIn ? HomePageScreen(user: User(email: "")) : Register(),
+            home: isLoggedIn
+                ? FutureBuilder<String?>(
+              future: Share_preferences().getTokenFromPrefs(),
+              builder: (context, tokenSnapshot) {
+                if (tokenSnapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (tokenSnapshot.hasError) {
+                  return Scaffold(
+                    body: Center(
+                      child: Text('Error: ${tokenSnapshot.error}'),
+                    ),
+                  );
+                } else {
+                  final token = tokenSnapshot.data;
+                  if (token != null) {
+                    // Fetch user data using token
+                    return NoteDetailScreen();
+                  } else {
+                    return Register();
+                  }
+                }
+              },
+            )
+                : Register(),
           );
         }
       },

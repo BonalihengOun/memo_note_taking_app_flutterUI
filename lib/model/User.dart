@@ -9,7 +9,6 @@ class User with ChangeNotifier {
   String? confirmPassword;
 
   User({
-    
     this.username,
     this.email,
     this.password,
@@ -24,7 +23,6 @@ class User with ChangeNotifier {
       confirmPassword: json['confirmPassword'], // Corrected typo in key name
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'username': username,

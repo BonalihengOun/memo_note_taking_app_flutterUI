@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_email_validator/email_validator.dart';
-import 'package:memo_note_app/utils/share_preferrences.dart';
-import 'package:memo_note_app/view/Screen/Homepage.dart';
 
 import 'package:memo_note_app/view/Screen/auth/registerscreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Provider/Authprovider.dart';
-import '../../../model/User.dart';
+import '../Homepage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -249,94 +247,101 @@ class _LoginScreenState extends State<LoginScreen> {
                                     final email = _emailController.text;
                                     final password = _passwordController.text;
 
-                                    if (email.isNotEmpty &&
-                                        password.isNotEmpty) {
-                                      showDialog(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (BuildContext context) =>
-                                            Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 5,
-                                            strokeCap: StrokeCap.round,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
-                                            semanticsLabel: 'Loading',
-                                            semanticsValue: '20%',
-                                          ),
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) => Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 5,
+                                          strokeCap: StrokeCap.round,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                          semanticsLabel: 'Loading',
+                                          semanticsValue: '20%',
                                         ),
-                                      );
+                                      ),
+                                    );
 
-                                      try {
-                                        final isEmailRegistered =
-                                            await loginAuthProvider
-                                                .isEmailregistered(email);
+                                    try {
+                                      final isEmailRegistered =
+                                          await loginAuthProvider
+                                              .isEmailregistered(email);
 
-                                        if (!isEmailRegistered) {
-                                          await Future.delayed(
-                                              const Duration(seconds: 2));
-                                          Navigator.pop(context);
-                                          showCustomAlertDialog(
-                                            context,
-                                            'Warning',
-                                            'This Email is not registered!!!',
-                                            'Please use a different email.',
-                                            Colors.amber,
-                                            imagePath: 'lib/assets/warning.png',
-                                          );
-                                          await Future.delayed(
-                                              const Duration(seconds: 2));
-                                          return; // Exit the function if email is not registered
-                                        }
+                                      if (!isEmailRegistered) {
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
+                                        Navigator.pop(context);
+                                        showCustomAlertDialog(
+                                          context,
+                                          'Warning',
+                                          'This Email is not registered!!!',
+                                          'Please use a different email.',
+                                          Colors.amber,
+                                          imagePath: 'lib/assets/warning.png',
+                                        );
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
+                                        return; // Exit the function if email is not registered
+                                      }
 
-                                        final user = await loginAuthProvider
-                                            .getUserByEmailAndPassword(
-                                                email, password);
-                                        print("This is user: ${user}");
-                                        if (user == null) {
-                                          await Future.delayed(
-                                              const Duration(seconds: 2));
-                                          Navigator.pop(context);
-                                          showCustomAlertDialog(
-                                            context,
-                                            'Error',
-                                            'Email or password is incorrect',
-                                            'Please try again.',
-                                            Colors.red,
-                                            imagePath: 'lib/assets/cross.png',
-                                          );
-                                        } else {
-                                          await Future.delayed(
-                                              const Duration(seconds: 2));
-                                          Navigator.pop(context);
-                                          showCustomAlertDialog(
-                                            context,
-                                            'Success',
-                                            'Login Successful',
-                                            'You have successfully logged in.',
-                                            Colors.green.shade700,
-                                            imagePath: 'lib/assets/check.png',
-                                          );
-                                          await Future.delayed(
-                                              const Duration(seconds: 2));
+                                      final bool loginResult =
                                           await loginAuthProvider.loginAcc(
                                               email, password, context);
-                                        }
-                                      } catch (error) {
-                                        print('Error during login: $error');
+
+                                      if (!loginResult) {
+                                        // Incorrect password
                                         await Future.delayed(
                                             const Duration(seconds: 2));
                                         Navigator.pop(context);
                                         showCustomAlertDialog(
                                           context,
                                           'Error',
-                                          'An error occurred during login',
-                                          'Please try again later.',
+                                          'Email or password is incorrect',
+                                          'Please try again.',
                                           Colors.red,
                                           imagePath: 'lib/assets/cross.png',
                                         );
+                                        return;
                                       }
+
+                                      // Login successful
+                                      await Future.delayed(
+                                          const Duration(seconds: 2));
+                                      Navigator.pop(
+                                          context); // Dismiss loading dialog
+                                      showCustomAlertDialog(
+                                        context,
+                                        'Success',
+                                        'Login Successful',
+                                        'You have successfully logged in.',
+                                        Colors.green.shade700,
+                                        imagePath: 'lib/assets/check.png',
+                                      );
+                                      await Future.delayed(
+                                          const Duration(seconds: 2));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              HomePageScreen(),
+                                        ),
+                                      );
+                                    } catch (error) {
+                                      // Handle login error
+                                      print('Error during login: $error');
+                                      await Future.delayed(
+                                          const Duration(seconds: 2));
+                                      Navigator.pop(
+                                          context); // Dismiss loading dialog
+                                      showCustomAlertDialog(
+                                        context,
+                                        'Error',
+                                        'An error occurred during login',
+                                        'Please try again later.',
+                                        Colors.red,
+                                        imagePath: 'lib/assets/cross.png',
+                                      );
                                     }
                                   }
                                 },

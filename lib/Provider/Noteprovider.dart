@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import '../model/notePaper.dart';
@@ -7,11 +6,11 @@ import '../utils/share_preferrences.dart';
 
 class NoteProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseURl = 'http://192.168.42.165:8080/api/memo/notes/';
+  final String _baseUrl = 'http://192.168.70.143:8081/api/memo/notes/';
   bool _isLoading = false;
   String? _errorMessage;
-  bool get isLoading => _isLoading;
 
+  bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
   set isLoading(bool value) {
@@ -25,24 +24,38 @@ class NoteProvider with ChangeNotifier {
       if (token == null) {
         throw Exception('Access token is null');
       }
+
       final headers = {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       };
-      // Make the API call
+
       final response = await http.get(
-        Uri.parse(_baseURl),
+        Uri.parse(_baseUrl),
         headers: headers,
       );
+
       if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(response.body);
-        final List<Notepaper> notePapers =
-            jsonResponse.map((json) => Notepaper.fromJson(json)).toList();
-        // Convert each JSON object to a Notepaper object
-        return notePapers;
+        final dynamic jsonResponse = json.decode(response.body);
+        print("Response: $jsonResponse");
+
+        if (jsonResponse is Map<String, dynamic> && jsonResponse.containsKey('payload')) {
+          final List<dynamic>? payload = jsonResponse['payload'];
+
+          if (payload != null) {
+            final List<Notepaper> notePapers = payload.map((json) => Notepaper.fromJson(json)).toList();
+            return notePapers;
+          } else {
+            print('Invalid payload in JSON response: $jsonResponse');
+            throw Exception('Invalid payload in JSON response');
+          }
+        } else {
+          print('Invalid JSON response: $jsonResponse');
+          throw Exception('Invalid JSON response');
+        }
       } else {
-        print('Error fetching data: ${response.statusCode}');
-        throw Exception('Failed to load notes: ${response.body}');
+        print('Request failed with status: ${response.statusCode}');
+        throw Exception('Request failed with status: ${response.statusCode}');
       }
     } catch (error) {
       print('Error fetching data: $error');

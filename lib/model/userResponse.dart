@@ -8,9 +8,16 @@ class UserResponse {
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
     return UserResponse(
-      userId: json['userId'],
-      username: json['username'],
-      email: json['email'],
+      userId: json['userId'] ?? 0,
+      username: json['username'] ?? '',
+      email: json['email'] ?? '',
     );
+  }
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'username': username,
+      'email': email,
+    };
   }
 }
