@@ -3,9 +3,9 @@ import 'package:memo_note_app/model/userResponse.dart';
 class Tag {
   final int tagId;
   final String tagName;
-  final UserResponse users;
+  final UserResponse? users;
 
-  Tag({required this.tagId, required this.tagName, required this.users});
+  Tag({required this.tagId, required this.tagName,  this.users});
 
   factory Tag.fromJson(Map<String, dynamic> json) {
     return Tag(
@@ -19,7 +19,7 @@ class Tag {
     return {
       'tag_Id': tagId,
       'tagName': tagName,
-      'users': users.toMap(),
     };
   }
+
 }

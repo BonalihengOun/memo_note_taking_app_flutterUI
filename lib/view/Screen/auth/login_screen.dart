@@ -443,7 +443,7 @@ void showCustomAlertDialog(BuildContext context, String title, String message,
                     ),
                     SizedBox(height: 10),
                     Center(
-                        child: Text(message,
+                        child: Text(message,maxLines: 2,textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontFamily: 'NiraRegular',
                                 fontSize: 12,
@@ -451,7 +451,7 @@ void showCustomAlertDialog(BuildContext context, String title, String message,
                     SizedBox(
                       height: 5,
                     ),
-                    Text(description,
+                    Text(description,maxLines: 2,textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: 'NiraRegular',
                             fontSize: 12,

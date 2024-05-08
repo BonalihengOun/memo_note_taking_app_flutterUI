@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:memo_note_app/Provider/Noteprovider.dart';
 import 'package:memo_note_app/Provider/Tagprovider.dart';
 
 import 'package:memo_note_app/model/notePaper.dart';
 import 'package:memo_note_app/utils/share_preferrences.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/tag.dart';
+import '../../model/Tag.dart';
+import '../Components/SearchBarComponent.dart';
 import 'Note_detail_screen.dart';
 import 'auth/login_screen.dart';
 
@@ -21,9 +24,10 @@ class HomePageScreen extends StatefulWidget {
 
 class _HomePageScreenState extends State<HomePageScreen> {
   Share_preferences _prefs = Share_preferences();
+  List<Tag> _selectedTags = [];
   late Future<List<Notepaper>> _notePaperListFuture;
   late Future<List<Tag>> _tagListFuture;
-  List<Notepaper> _notePapers = [];
+
   String? _selectedTagName;
   bool _isLoading = true;
 
@@ -42,11 +46,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       setState(() {
         _notePaperListFuture = noteProvider.getAllNote();
         _tagListFuture = tagProvider.getAllTags();
+        _isLoading = false;
       });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _updateSelectedTagName(String tagName) {
@@ -65,31 +67,23 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  void _handlePinAction(Notepaper _notePapers) {
-    setState(() {
-      // Toggle the pin status of the note
-      _notePapers.isPinned = !_notePapers.isPinned;
-      // If the note is pinned, move it to the top of the list in the UI
-      if (_notePapers.isPinned) {
-        _notePaperListFuture = _notePaperListFuture.then((notePapers) {
-          // Remove the note from its current position in the list
-          notePapers.remove(_notePapers);
-          // Insert the note at the beginning of the list
-          notePapers.insert(0, _notePapers);
-          return notePapers;
-        });
-      }
-    });
-  }
 
 
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       backgroundColor: Color(0xffF6F5EC),
       body: _isLoading
           ? Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                strokeWidth: 5,
+                strokeCap: StrokeCap.round,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xff610AA5)),
+                semanticsLabel: 'Loading',
+                semanticsValue: '20%',
+              ),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +116,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                           height: 26,
                         ),
                         onPressed: () {
-                          _logout(context);
+                          showSearch(context: context, delegate: NoteSearchByTitle());
                         },
                       ),
                     ),
@@ -175,10 +169,18 @@ class _HomePageScreenState extends State<HomePageScreen> {
                           child: FutureBuilder<List<Tag>>(
                             future: _tagListFuture,
                             builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
+                              if (_tagListFuture == null ||
+                                  snapshot.connectionState ==
+                                      ConnectionState.waiting) {
                                 return Center(
-                                  child: CircularProgressIndicator(),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 5,
+                                    strokeCap: StrokeCap.round,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xff610AA5)),
+                                    semanticsLabel: 'Loading',
+                                    semanticsValue: '20%',
+                                  ),
                                 );
                               } else if (snapshot.hasError) {
                                 return Center(
@@ -190,7 +192,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                   return Container();
                                 } else {
                                   return Container(
-                                    margin: EdgeInsets.only(left: 10),
+                                    margin: EdgeInsets.only(left: 0),
                                     width:
                                         MediaQuery.of(context).size.width * 0.8,
                                     height: MediaQuery.of(context).size.height *
@@ -244,6 +246,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         );
                       } else {
                         final notePapers = snapshot.data!;
+
                         // Filter note papers based on selected tag name
                         final filteredNotePapers = _selectedTagName != null
                             ? notePapers
@@ -282,11 +285,24 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                   final backgroundColor =
                                       notePaper.selectColor ??
                                           Colors.transparent;
+                                  String formatCreationDate(DateTime creationDate) {
+                                    final formatter = DateFormat('yyyy-MMM-dd hh:mm:ss a');
+                                    return formatter.format(creationDate);
+                                  }
                                   return Padding(
                                     padding: EdgeInsets.symmetric(vertical: 10),
                                     child: GestureDetector(
                                       onTap: () {
-                                        print('notePaper: ${notePaper.title}');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => NoteDetailScreen(
+                                              note: notePapers[index] // Pass selected tags to NoteDetailScreen
+                                            ),
+                                          ),
+                                        );
+
+                                        print(notePapers[index]);
                                       },
                                       child: Container(
                                         width:
@@ -297,7 +313,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                                 0.3,
                                         decoration: BoxDecoration(
                                           border: Border.all(
-                                              width: 2.5,
+                                            style: BorderStyle.solid,
+                                              width: 3,
                                               color: Colors.black
                                                   .withOpacity(1.0)),
                                           borderRadius:
@@ -338,11 +355,28 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                                       context, notePaper)
                                                 ],
                                               ),
-                                              Text(
-                                                notePaper.note_content,
-                                                style: TextStyle(
-                                                  fontFamily: 'NiraRegular',
-                                                  fontSize: 12,
+                                             Column(
+                                               mainAxisAlignment: MainAxisAlignment.start,
+                                               crossAxisAlignment: CrossAxisAlignment.start,
+                                               children: [
+                                               Text(
+                                                 notePaper.note_content,
+                                                 maxLines: 8,
+                                                 overflow: TextOverflow.ellipsis,
+                                                 style: TextStyle(
+                                                   fontFamily: 'NiraRegular',
+                                                   fontSize: 12,
+                                                 ),
+                                               ),
+                                             ],),
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 150),
+                                                child: Text(
+                                                  formatCreationDate(notePaper.creationDate),
+                                                  style: TextStyle(
+                                                    fontFamily: 'NiraSemi',
+                                                    fontSize: 12,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -367,10 +401,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
         child: FloatingActionButton(
           backgroundColor: Color(0xff610AA5), // Set the background color
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => NoteDetailScreen()),
-            );
+            if (mounted)
+              Navigator.push(
+                  context,
+                  PageTransition(
+                      type: PageTransitionType.rightToLeftWithFade,
+                      child: NoteDetailScreen(note: null,)));
           },
           child: Icon(Icons.add, color: Colors.white), // Set the icon color
           shape: CircleBorder(),
@@ -389,10 +425,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
           _updateSelectedTagName(tagName);
         },
         child: Container(
-          width: 100,
-          height: 20,
+          width: MediaQuery.of(context).size.width * 0.2,
           decoration: BoxDecoration(
-            border: Border.all(width: 1.5),
+            border: Border.all(
+              width: 1.5,
+              color: isSelected || (isAll && _selectedTagName == null)
+                  ? Color(0xff610AA5)
+                  : Colors.black,
+            ),
             color: isSelected || (isAll && _selectedTagName == null)
                 ? Color(0xff610AA5)
                 : Colors.white,
@@ -403,8 +443,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
             child: Center(
               child: Text(
                 tagName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+               textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isSelected || (isAll && _selectedTagName == null)
                       ? Colors.white
@@ -422,26 +462,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Widget _buildCustomPopupMenu(BuildContext context, Notepaper notePaper) {
     return PopupMenuButton<String>(
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
-          value: 'pin',
-          child: Row(
-            children: [
-              Image.asset(
-                'lib/assets/pin.png',
-                width: 20,
-                height: 20,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Pin',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontFamily: 'NiraRegular',
-                ),
-              ),
-            ],
-          ),
-        ),
+
         PopupMenuItem<String>(
           value: 'delete',
           child: Row(
@@ -465,13 +486,108 @@ class _HomePageScreenState extends State<HomePageScreen> {
       ],
       onSelected: (String value) {
         if (value == 'pin') {
-          _handlePinAction(notePaper);
-        } else if (value == 'delete') {}
+          // Handle pin action if needed
+        } else if (value == 'delete') {
+          _deleteNote(context, notePaper);
+        }
       },
       child: Container(
         padding: EdgeInsets.all(10),
         child: Icon(Icons.more_vert),
       ),
+    );
+  }
+
+  void _deleteNote(BuildContext context, Notepaper notePaper) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // Store a reference to the confirmation dialog
+        AlertDialog confirmationDialog = AlertDialog(
+          backgroundColor: Color(0xffF6F5EC),
+          title: Text(
+            'Confirm Deletion',
+            style: TextStyle(fontFamily: 'NiraSemi', color: Colors.black),
+          ),
+          content: Text('Are you sure you want to delete this note?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Show a loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) => Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 5,
+                      strokeCap: StrokeCap.round,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      semanticsLabel: 'Loading',
+                      semanticsValue: '20%',
+                    ),
+                  ),
+                );
+
+                // Perform deletion logic here
+                final noteProvider =
+                    Provider.of<NoteProvider>(context, listen: false);
+                try {
+                  await Future.delayed(const Duration(seconds: 1));
+                  Navigator.pop(
+                      context); // Close the circular progress indicator
+                  final bool isSuccess = await noteProvider
+                      .deleteNote(notePaper.notedId.toString());
+                  if (isSuccess) {
+                    // showCustomAlertDialog(
+                    //   context,
+                    //   'Success',
+                    //   'Note Deleted Successful',
+                    //   'This note has been deleted.',
+                    //   Colors.green.shade700,
+                    //   imagePath: 'lib/assets/check.png',
+                    // );
+                    // await Future.delayed(const Duration(seconds: 1));
+                    // Navigator.pop(context);
+                    _fetchData();
+                  } else {
+                    showCustomAlertDialog(
+                      context,
+                      'Error',
+                      'Note Already Deleted',
+                      'This note has already been deleted.',
+                      Colors.red.shade700,
+                      imagePath: 'lib/assets/cross.png',
+                    );
+                    await Future.delayed(const Duration(seconds: 1));
+                    Navigator.pop(context);
+                  }
+                } catch (error) {
+                  print('Error Deleting note: $error');
+                  Navigator.pop(
+                      context); // Close the circular progress indicator
+                  showCustomAlertDialog(
+                    context,
+                    'Error',
+                    'Failed to delete Note',
+                    'An error occurred while deleting the note.',
+                    Colors.red.shade700,
+                    imagePath: 'lib/assets/cross.png',
+                  );
+                }
+                Navigator.pop(
+                    context); // Pop off the confirmation dialog if it's still there
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+
+        return confirmationDialog;
+      },
     );
   }
 }

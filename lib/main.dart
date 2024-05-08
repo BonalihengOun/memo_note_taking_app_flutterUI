@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:memo_note_app/Provider/Authprovider.dart';
 import 'package:memo_note_app/Provider/Noteprovider.dart';
 import 'package:memo_note_app/Provider/Tagprovider.dart';
-import 'package:memo_note_app/model/User.dart';
+
+import 'package:memo_note_app/model/notePaper.dart';
+import 'package:memo_note_app/model/notepaperRequest.dart';
 import 'package:memo_note_app/utils/share_preferrences.dart';
 import 'package:memo_note_app/view/Screen/Note_detail_screen.dart';
 import 'package:memo_note_app/view/Screen/auth/registerscreen.dart';
 import 'package:memo_note_app/view/Screen/Homepage.dart';
 import 'package:provider/provider.dart';
+
+import 'model/userResponse.dart';
 
 void main() {
   runApp(
@@ -42,12 +46,27 @@ class MyApp extends StatelessWidget {
           final bool isLoggedIn = snapshot.data!;
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+
             title: 'Memo Note App',
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: isLoggedIn
+            home:
+            // NoteDetailScreen(
+            //   note: Notepaper(
+            //     title: 'Initial Title',
+            //     note_content: 'Initial Content',
+            //     note_description: 'Initial Description',
+            //     notedId: 0, creationDate: DateTime.now(),
+            //     users: UserResponse(userId: 0, username: '', email: ''),
+            //     tagsLists: [],
+            //     selectColor: Colors.white,
+            //
+            //     // Add other properties as needed
+            //   ),
+            // ),
+            isLoggedIn
                 ? FutureBuilder<String?>(
               future: Share_preferences().getTokenFromPrefs(),
               builder: (context, tokenSnapshot) {
@@ -63,7 +82,7 @@ class MyApp extends StatelessWidget {
                   final token = tokenSnapshot.data;
                   if (token != null) {
                     // Fetch user data using token
-                    return NoteDetailScreen();
+                    return const HomePageScreen();
                   } else {
                     return Register();
                   }

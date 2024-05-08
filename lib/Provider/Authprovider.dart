@@ -11,7 +11,7 @@ import '../utils/share_preferrences.dart';
 
 class AuthProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseURl = 'http://192.168.70.143:8081/api/memo/notes/Auth/';
+  final String _baseURl = 'http://192.168.106.144:8080/api/memo/notes/Auth/';
   bool _isLoading = false;
   String? _errorMessage;
   bool _iscountdownstarted = false;
