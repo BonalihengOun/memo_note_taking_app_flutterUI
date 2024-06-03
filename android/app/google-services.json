@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "103702498759",
+    "project_id": "memo-note-app",
+    "storage_bucket": "memo-note-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103702498759:android:00e763e008a93dbdb51de2",
+        "android_client_info": {
+          "package_name": "com.example.memo_note_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoaSUH2amShp7LG1qRLT39uVOZZhrlURE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

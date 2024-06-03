@@ -11,7 +11,7 @@ import '../utils/share_preferrences.dart';
 
 class AuthProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseURl = 'http://192.168.106.144:8080/api/memo/notes/Auth/';
+  final String _baseURl = 'http://192.168.147.143:8080/api/memo/notes/Auth/';
   bool _isLoading = false;
   String? _errorMessage;
   bool _iscountdownstarted = false;
@@ -93,7 +93,15 @@ class AuthProvider with ChangeNotifier {
         // Handle incorrect password
         print('Incorrect password');
         return false; // Incorrect password
-      } else {
+      } else if (response.statusCode == 400) {
+        // Handle invalid email
+        print('Please Verify your Email, We sent an OTP on your email address');
+        await resendOTP(
+            email, context);
+        return false; // Invalid email
+      }
+
+      else {
         throw Exception(
             'Login failed: ${response.statusCode}, ${response.reasonPhrase}');
       }

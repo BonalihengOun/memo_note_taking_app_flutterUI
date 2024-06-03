@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:memo_note_app/Provider/Noteprovider.dart';
 import 'package:memo_note_app/Provider/Tagprovider.dart';
+import 'package:memo_note_app/model/User.dart';
 
 import 'package:memo_note_app/model/notePaper.dart';
 import 'package:memo_note_app/utils/share_preferrences.dart';
@@ -14,8 +17,10 @@ import 'Note_detail_screen.dart';
 import 'auth/login_screen.dart';
 
 class HomePageScreen extends StatefulWidget {
+  final User? user;
   const HomePageScreen({
     Key? key,
+    required this.user,
   }) : super(key: key);
 
   @override
@@ -24,6 +29,7 @@ class HomePageScreen extends StatefulWidget {
 
 class _HomePageScreenState extends State<HomePageScreen> {
   Share_preferences _prefs = Share_preferences();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<Tag> _selectedTags = [];
   late Future<List<Notepaper>> _notePaperListFuture;
   late Future<List<Tag>> _tagListFuture;
@@ -67,352 +73,436 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-
-
-    return Scaffold(
-      backgroundColor: Color(0xffF6F5EC),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 5,
-                strokeCap: StrokeCap.round,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xff610AA5)),
-                semanticsLabel: 'Loading',
-                semanticsValue: '20%',
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return RefreshIndicator(
+      color: Color(0xff610AA5),
+      onRefresh: () async {
+        _fetchData();
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: Color(0xffF6F5EC),
+        drawer: Drawer(
+            backgroundColor: Color(0xffF6F5EC),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: 20,
+                Padding(
+                  padding: const EdgeInsets.only(top: 50, left: 15, right: 15),
+                  child: Container(
+                    child: Image.asset('lib/assets/Welcome.png'),
+                  ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: IconButton(
-                        icon: const Image(
-                          image: AssetImage("lib/assets/user.png"),
-                          width: 26,
-                          height: 26,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: IconButton(
-                        splashRadius: 25,
-                        alignment: Alignment.centerRight,
-                        icon: const Image(
-                          image: AssetImage("lib/assets/search.png"),
-                          width: 26,
-                          height: 26,
-                        ),
-                        onPressed: () {
-                          showSearch(context: context, delegate: NoteSearchByTitle());
-                        },
-                      ),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 50, left: 15, right: 15),
+                  child: Container(
+                    child: Image.asset('lib/assets/user.png'),
+                    width: 80,
+                    height: 80,
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                        child: _isLoading
-                            ? Container()
-                            : // If loading, show an empty container
-                            (_tagListFuture != null ||
-                                    _notePaperListFuture == null)
-                                ? Container(
-                                    child: Image(
-                                      image: AssetImage(
-                                          'lib/assets/Welcome_Sir.png'),
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6,
-                                    ),
-                                  )
-                                : Container() // If data not available, show an empty container
-
-                        ),
-                    Container(
-                        child: _isLoading
-                            ? Container()
-                            : // If loading, show an empty container
-                            (_tagListFuture == null &&
-                                    _notePaperListFuture != null)
-                                ? Container(
-                                    child: Image(
-                                      image: AssetImage(
-                                          'lib/assets/Welcome_Sir.png'),
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6,
-                                    ),
-                                  )
-                                : Container() // If data not available, show an empty container
-
-                        ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Row(
+                Padding(
+                  padding: const EdgeInsets.only(top: 50, left: 15, right: 15),
+                  child: Text(
+                    '${widget.user?.email}',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+                Container(
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          flex: 1,
-                          child: FutureBuilder<List<Tag>>(
-                            future: _tagListFuture,
-                            builder: (context, snapshot) {
-                              if (_tagListFuture == null ||
-                                  snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 5,
-                                    strokeCap: StrokeCap.round,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xff610AA5)),
-                                    semanticsLabel: 'Loading',
-                                    semanticsValue: '20%',
-                                  ),
-                                );
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                  child: Text('Error: ${snapshot.error}'),
-                                );
-                              } else {
-                                final List<Tag> tags = snapshot.data!;
-                                if (tags.isEmpty) {
-                                  return Container();
-                                } else {
-                                  return Container(
-                                    margin: EdgeInsets.only(left: 0),
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.8,
-                                    height: MediaQuery.of(context).size.height *
-                                        0.055,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      shrinkWrap: true,
-                                      itemCount: tags.length +
-                                          1, // +1 for the "All" option
-                                      itemBuilder: (context, index) {
-                                        if (index == 0) {
-                                          return _buildTagFilterButton(
-                                              "All", _selectedTagName == "All");
-                                        } else {
-                                          final tag = tags[index - 1];
-                                          return _buildTagFilterButton(
-                                              tag.tagName,
-                                              tag.tagName == _selectedTagName);
-                                        }
-                                      },
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                          ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _logout(context);
+                          },
+                          child: Text('Logout'),
                         ),
-                      ],
-                    ),
-                  ],
+                      ]),
                 ),
-                Expanded(
-                  flex: 1,
-                  child: FutureBuilder<List<Notepaper>>(
-                    future: _notePaperListFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 5,
-                            strokeCap: StrokeCap.round,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xff610AA5)),
-                            semanticsLabel: 'Loading',
-                            semanticsValue: '20%',
+              ],
+            )),
+        body: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 5,
+                  strokeCap: StrokeCap.round,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xff610AA5)),
+                  semanticsLabel: 'Loading',
+                  semanticsValue: '20%',
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: IconButton(
+                          icon: const Image(
+                            image: AssetImage("lib/assets/user.png"),
+                            width: 26,
+                            height: 26,
                           ),
-                        );
-                      } else if (snapshot.hasError) {
-                        return Center(
-                          child: Text('Error: ${snapshot.error}'),
-                        );
-                      } else {
-                        final notePapers = snapshot.data!;
-
-                        // Filter note papers based on selected tag name
-                        final filteredNotePapers = _selectedTagName != null
-                            ? notePapers
-                                .where(
-                                  (notePaper) => notePaper.tagsLists!.any(
-                                      (tag) => tag.tagName == _selectedTagName),
-                                )
-                                .toList()
-                            : notePapers;
-
-                        if (filteredNotePapers.isEmpty) {
-                          return Center(
-                            child: Container(
-                              margin: EdgeInsets.only(bottom: 100),
-                              child: Image(
-                                image:
-                                    AssetImage('lib/assets/Welcome_note.png'),
-                                width: MediaQuery.of(context).size.width * 0.7,
-                              ),
-                            ),
-                          );
-                        } else {
-                          return Center(
-                            child: Container(
-                              width:
-                                  MediaQuery.of(context).size.width * 90 / 100,
-                              height:
-                                  MediaQuery.of(context).size.height * 90 / 100,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: ListView.builder(
-                                scrollDirection: Axis.vertical,
-                                itemCount: filteredNotePapers.length,
-                                itemBuilder: (context, index) {
-                                  final notePaper = filteredNotePapers[index];
-                                  final backgroundColor =
-                                      notePaper.selectColor ??
-                                          Colors.transparent;
-                                  String formatCreationDate(DateTime creationDate) {
-                                    final formatter = DateFormat('yyyy-MMM-dd hh:mm:ss a');
-                                    return formatter.format(creationDate);
-                                  }
-                                  return Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => NoteDetailScreen(
-                                              note: notePapers[index] // Pass selected tags to NoteDetailScreen
-                                            ),
-                                          ),
-                                        );
-
-                                        print(notePapers[index]);
-                                      },
-                                      child: Container(
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                          splashRadius: 25,
+                          alignment: Alignment.centerRight,
+                          icon: const Image(
+                            image: AssetImage("lib/assets/search.png"),
+                            width: 26,
+                            height: 26,
+                          ),
+                          onPressed: () {
+                            showSearch(
+                                context: context,
+                                delegate: NoteSearchByTitle());
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                          child: _isLoading
+                              ? Container()
+                              : // If loading, show an empty container
+                              (_tagListFuture != null ||
+                                      _notePaperListFuture == null)
+                                  ? Container(
+                                      child: Image(
+                                        image: AssetImage(
+                                            'lib/assets/Welcome_Sir.png'),
                                         width:
                                             MediaQuery.of(context).size.width *
-                                                0.09,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.3,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            style: BorderStyle.solid,
-                                              width: 3,
-                                              color: Colors.black
-                                                  .withOpacity(1.0)),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          color: backgroundColor,
-                                          image: backgroundColor ==
-                                                  Colors.transparent
-                                              ? DecorationImage(
-                                                  image: AssetImage(Notepaper
-                                                      .defaultImagePath),
-                                                  fit: BoxFit.fill,
-                                                )
-                                              : null, // Use background image only if color is not provided
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 15, top: 10),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      notePaper.title,
-                                                      maxLines:
-                                                          2, // Limit to 2 lines
-                                                      overflow: TextOverflow
-                                                          .ellipsis, // Show ellipsis if text overflows
-                                                      style: TextStyle(
-                                                        fontFamily: 'NiraBold',
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  _buildCustomPopupMenu(
-                                                      context, notePaper)
-                                                ],
+                                                0.6,
+                                      ),
+                                    )
+                                  : Container() // If data not available, show an empty container
+
+                          ),
+                      Container(
+                          child: _isLoading
+                              ? Container()
+                              : // If loading, show an empty container
+                              (_tagListFuture == null &&
+                                      _notePaperListFuture != null)
+                                  ? Container(
+                                      child: Image(
+                                        image: AssetImage(
+                                            'lib/assets/Welcome_Sir.png'),
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.6,
+                                      ),
+                                    )
+                                  : Container() // If data not available, show an empty container
+
+                          ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: FutureBuilder<List<Tag>>(
+                              future: _tagListFuture,
+                              builder: (context, snapshot) {
+                                if (_tagListFuture == null ||
+                                    snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                  return Center();
+                                } else if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text('Error: ${snapshot.error}'),
+                                  );
+                                } else {
+                                  final List<Tag> tags = snapshot.data!;
+                                  if (tags.isEmpty) {
+                                    return Container();
+                                  } else {
+                                    return Container(
+                                      margin: EdgeInsets.only(left: 0),
+                                      width: MediaQuery.of(context).size.width *
+                                          0.8,
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.055,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        shrinkWrap: true,
+                                        itemCount: tags.length +
+                                            1, // +1 for the "All" option
+                                        itemBuilder: (context, index) {
+                                          if (index == 0) {
+                                            return _buildTagFilterButton("All",
+                                                _selectedTagName == "All");
+                                          } else {
+                                            final tag = tags[index - 1];
+                                            return _buildTagFilterButton(
+                                                tag.tagName,
+                                                tag.tagName ==
+                                                    _selectedTagName);
+                                          }
+                                        },
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: FutureBuilder<List<Notepaper>>(
+                      future: _notePaperListFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 5,
+                              strokeCap: StrokeCap.round,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xff610AA5)),
+                              semanticsLabel: 'Loading',
+                              semanticsValue: '20%',
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        } else {
+                          final notePapers = snapshot.data!;
+
+                          // Filter note papers based on selected tag name
+                          final filteredNotePapers = _selectedTagName != null
+                              ? notePapers
+                                  .where(
+                                    (notePaper) => notePaper.tagsLists!.any(
+                                        (tag) =>
+                                            tag.tagName == _selectedTagName),
+                                  )
+                                  .toList()
+                              : notePapers;
+
+                          if (filteredNotePapers.isEmpty) {
+                            return Center(
+                              child: Container(
+                                margin: EdgeInsets.only(bottom: 100),
+                                child: Image(
+                                  image:
+                                      AssetImage('lib/assets/Welcome_note.png'),
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.7,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Center(
+                              child: Container(
+                                width: MediaQuery.of(context).size.width *
+                                    90 /
+                                    100,
+                                height: MediaQuery.of(context).size.height *
+                                    90 /
+                                    100,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20)),
+                                child: ListView.builder(
+                                  scrollDirection: Axis.vertical,
+                                  itemCount: filteredNotePapers.length,
+                                  itemBuilder: (context, index) {
+                                    final notePaper = filteredNotePapers[index];
+                                    final backgroundColor =
+                                        notePaper.selectColor ??
+                                            Colors.transparent;
+                                    String formatCreationDate(
+                                        DateTime creationDate) {
+                                      final formatter =
+                                          DateFormat('yyyy-MMM-dd hh:mm:ss a');
+                                      return formatter.format(creationDate);
+                                    }
+
+                                    return Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 10),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  NoteDetailScreen(
+                                                note: notePaper,
                                               ),
-                                             Column(
-                                               mainAxisAlignment: MainAxisAlignment.start,
-                                               crossAxisAlignment: CrossAxisAlignment.start,
-                                               children: [
-                                               Text(
-                                                 notePaper.note_content,
-                                                 maxLines: 8,
-                                                 overflow: TextOverflow.ellipsis,
-                                                 style: TextStyle(
-                                                   fontFamily: 'NiraRegular',
-                                                   fontSize: 12,
-                                                 ),
-                                               ),
-                                             ],),
+                                            ),
+                                          );
+
+                                          print(notePapers[index]);
+                                        },
+                                        child: Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.09,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.3,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                style: BorderStyle.solid,
+                                                width: 3,
+                                                color: Colors.black
+                                                    .withOpacity(1.0)),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            color: backgroundColor,
+                                            image: backgroundColor ==
+                                                    Colors.transparent
+                                                ? DecorationImage(
+                                                    image: AssetImage(Notepaper
+                                                        .defaultImagePath),
+                                                    fit: BoxFit.fill,
+                                                  )
+                                                : null, // Use background image only if color is not provided
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
                                               Padding(
-                                                padding: const EdgeInsets.only(top: 150),
-                                                child: Text(
-                                                  formatCreationDate(notePaper.creationDate),
-                                                  style: TextStyle(
-                                                    fontFamily: 'NiraSemi',
-                                                    fontSize: 12,
-                                                  ),
+                                                padding: const EdgeInsets.only(
+                                                    left: 15, top: 10),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            notePaper.title,
+                                                            maxLines:
+                                                                2, // Limit to 2 lines
+                                                            overflow: TextOverflow
+                                                                .ellipsis, // Show ellipsis if text overflows
+                                                            style: TextStyle(
+                                                              fontFamily:
+                                                                  'NiraBold',
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        _buildCustomPopupMenu(
+                                                            context, notePaper)
+                                                      ],
+                                                    ),
+                                                    Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          notePaper
+                                                              .note_content,
+                                                          maxLines: 8,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'NiraRegular',
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 15, bottom: 5),
+                                                child: Row(
+                                                  // Align bottom left
+                                                  children: [
+                                                    Flexible(
+                                                      // Flexible widget for wrapping long text
+                                                      child: Text(
+                                                        formatCreationDate(
+                                                            notePaper
+                                                                .creationDate),
+                                                        style: TextStyle(
+                                                          fontFamily:
+                                                              'NiraSemi',
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
                                             ],
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         }
-                      }
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-      floatingActionButton: Container(
-        margin: EdgeInsets.only(bottom: 10.0), // Set margin bottom to 10
-        child: FloatingActionButton(
-          backgroundColor: Color(0xff610AA5), // Set the background color
-          onPressed: () {
-            if (mounted)
-              Navigator.push(
-                  context,
-                  PageTransition(
-                      type: PageTransitionType.rightToLeftWithFade,
-                      child: NoteDetailScreen(note: null,)));
-          },
-          child: Icon(Icons.add, color: Colors.white), // Set the icon color
-          shape: CircleBorder(),
+                ],
+              ),
+        floatingActionButton: Container(
+          margin: EdgeInsets.only(bottom: 10.0), // Set margin bottom to 10
+          child: FloatingActionButton(
+            backgroundColor: Color(0xff610AA5), // Set the background color
+            onPressed: () {
+              if (mounted)
+                Navigator.push(
+                    context,
+                    PageTransition(
+                        type: PageTransitionType.rightToLeftWithFade,
+                        child: const NoteDetailScreen(
+                          note: null,
+                        )));
+            },
+            child: Icon(Icons.add, color: Colors.white), // Set the icon color
+            shape: CircleBorder(),
+          ),
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
 
@@ -425,7 +515,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           _updateSelectedTagName(tagName);
         },
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.2,
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           decoration: BoxDecoration(
             border: Border.all(
               width: 1.5,
@@ -438,19 +528,18 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 : Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(30)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-              child: Text(
-                tagName,
-                maxLines: 2,
-               textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isSelected || (isAll && _selectedTagName == null)
-                      ? Colors.white
-                      : Colors.black,
-                  fontFamily: 'NiraBold',
-                ),
+          child: Center(
+            child: Text(
+              tagName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                height: 1,
+                color: isSelected || (isAll && _selectedTagName == null)
+                    ? Colors.white
+                    : Colors.black,
+                fontFamily: 'NiraBold',
               ),
             ),
           ),
@@ -462,7 +551,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Widget _buildCustomPopupMenu(BuildContext context, Notepaper notePaper) {
     return PopupMenuButton<String>(
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-
         PopupMenuItem<String>(
           value: 'delete',
           child: Row(

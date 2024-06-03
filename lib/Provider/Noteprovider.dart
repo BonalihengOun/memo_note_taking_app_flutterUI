@@ -8,7 +8,7 @@ import '../utils/share_preferrences.dart';
 
 class NoteProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseUrl = 'http://192.168.106.144:8080/api/memo/notes/';
+  final String _baseUrl = 'http://192.168.147.143:8080/api/memo/notes/';
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -112,7 +112,7 @@ class NoteProvider with ChangeNotifier {
       };
 
       final response = await http.delete(
-        Uri.parse(_baseUrl + '$id'),
+        Uri.parse('$_baseUrl$id'),
         headers: headers,
       );
 
@@ -142,31 +142,33 @@ class NoteProvider with ChangeNotifier {
       if (token == null) {
         throw Exception('Access token is null');
       }
+
       final headers = {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       };
 
       final response = await http.put(
-        Uri.parse(_baseUrl + id),
+        Uri.parse('$_baseUrl$id'),
         headers: headers,
         body: jsonEncode(notepaperRequest.toMap()),
       );
+
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         print("Response: $jsonResponse");
         print('Note updated successfully');
-        // Construct and return the updated note object
         return Notepaper.fromJson(jsonResponse);
       } else if (response.statusCode == 404) {
-        // Handle case where the note is not found
-        print("tag is not found");
-        print('Note with Id $id does not exist: ${response.statusCode}');
-        print('Failed to update note. Status code: ${response.statusCode}');
+        print(
+            'Note with Id $id does not exist. Status code: ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception('Failed to update note: Note not found');
+      } else if (response.statusCode == 401) {
+        print('Unauthorized. Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to update note: Unauthorized');
       } else {
-        // Handle other status codes if needed
         print('Failed to update note. Status code: ${response.statusCode}');
         print('Response body: ${response.body}');
         throw Exception('Failed to update note');
@@ -190,8 +192,7 @@ class NoteProvider with ChangeNotifier {
       };
 
       final response = await http.get(
-        Uri.parse(
-            'http://192.168.106.144:8080/api/memo/notes/' + 'title/' + title),
+        Uri.parse(_baseUrl + 'title/' + title),
         headers: headers,
       );
 

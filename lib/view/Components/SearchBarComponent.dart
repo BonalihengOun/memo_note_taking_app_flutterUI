@@ -28,6 +28,7 @@ class _SearchComponentNoteByTitleState
 }
 
 class NoteSearchByTitle extends SearchDelegate<String> {
+  List<String> recentSearches = [];
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
@@ -68,7 +69,24 @@ class NoteSearchByTitle extends SearchDelegate<String> {
         } else {
           final List<Notepaper> searchList = snapshot.data ?? [];
           if (searchList.isEmpty) {
-            return Center(child: Image.asset('lib/assets/404.gif'));
+            return Padding(
+              padding: const EdgeInsets.only(top: 250),
+              child: Column(
+                children: [
+                  Center(
+                      child: Image.asset(
+                    'lib/assets/404.gif',
+                    width: 100,
+                    height: 100,
+                  )),
+                  Center(
+                      child: Text(
+                    'No result found',
+                    style: TextStyle(fontFamily: 'NiraBold'),
+                  )),
+                ],
+              ),
+            );
           }
           return ListView.builder(
             itemCount: searchList.length,
@@ -125,15 +143,14 @@ class NoteSearchByTitle extends SearchDelegate<String> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 14, fontFamily: 'NiraSemi'),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Description: ${suggestion.note_description}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: 14, fontFamily: 'NiraRegular'),
-                      ),
-                      SizedBox(height: 8),
+                     if(suggestion.note_description.isNotEmpty)
+                        Text(
+                          'Description: ${suggestion.note_description}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontFamily: 'NiraSemi'),
+                        ),
+
                       Text(
                         'Creation Date: ${formatCreationDate(suggestion.creationDate)}',
                         maxLines: 2,

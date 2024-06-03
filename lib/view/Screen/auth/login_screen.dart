@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_email_validator/email_validator.dart';
+import 'package:memo_note_app/model/User.dart';
+import 'package:memo_note_app/view/Screen/auth/OTPVerificationScreen.dart';
 
 import 'package:memo_note_app/view/Screen/auth/registerscreen.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +10,9 @@ import '../../../Provider/Authprovider.dart';
 import '../Homepage.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -246,7 +250,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (_formKey.currentState!.validate()) {
                                     final email = _emailController.text;
                                     final password = _passwordController.text;
-
                                     showDialog(
                                       context: context,
                                       barrierDismissible: false,
@@ -284,10 +287,41 @@ class _LoginScreenState extends State<LoginScreen> {
                                             const Duration(seconds: 2));
                                         return; // Exit the function if email is not registered
                                       }
+                                      User user = User(
+                                        email: email,
+                                        username: email,
+                                      );
 
                                       final bool loginResult =
                                           await loginAuthProvider.loginAcc(
                                               email, password, context);
+                                      final bool isEmailVerify =
+                                          await loginAuthProvider.loginAcc(
+                                              email, password, context);
+                                      if (!isEmailVerify) {
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
+                                        Navigator.pop(context);
+                                        showCustomAlertDialog(
+                                          context,
+                                          'Success',
+                                          'Please Verify Your Email',
+                                          'Please check your email and verify your account.',
+                                          Colors.green.shade700,
+                                          imagePath: 'lib/assets/check.png',
+                                        );
+                                        await Future.delayed(
+                                            const Duration(seconds: 2));
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    OTPVerificationScreen(
+                                                        user: User(
+                                                            email: email))));
+
+                                        return;
+                                      }
 
                                       if (!loginResult) {
                                         // Incorrect password
@@ -323,8 +357,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              HomePageScreen(),
+                                          builder: (context) => HomePageScreen(
+                                            user: user,
+                                          ),
                                         ),
                                       );
                                     } catch (error) {
@@ -443,7 +478,9 @@ void showCustomAlertDialog(BuildContext context, String title, String message,
                     ),
                     SizedBox(height: 10),
                     Center(
-                        child: Text(message,maxLines: 2,textAlign: TextAlign.center,
+                        child: Text(message,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontFamily: 'NiraRegular',
                                 fontSize: 12,
@@ -451,7 +488,9 @@ void showCustomAlertDialog(BuildContext context, String title, String message,
                     SizedBox(
                       height: 5,
                     ),
-                    Text(description,maxLines: 2,textAlign: TextAlign.center,
+                    Text(description,
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: 'NiraRegular',
                             fontSize: 12,
