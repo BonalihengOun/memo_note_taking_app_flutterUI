@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
                   final token = tokenSnapshot.data;
                   if (token != null) {
                     // Fetch user data using token
-                    return const HomePageScreen(user: null,);
+                    return const HomePageScreen(loginResponse: null,);
                   } else {
                     return Register();
                   }

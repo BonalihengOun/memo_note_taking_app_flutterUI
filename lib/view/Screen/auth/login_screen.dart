@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_email_validator/email_validator.dart';
+import 'package:memo_note_app/model/LoginResponse.dart';
 import 'package:memo_note_app/model/User.dart';
+import 'package:memo_note_app/view/Screen/auth/ForgotPassword_Screen.dart';
+import 'package:memo_note_app/view/Screen/auth/NewPasswordScreen.dart';
 import 'package:memo_note_app/view/Screen/auth/OTPVerificationScreen.dart';
 
 import 'package:memo_note_app/view/Screen/auth/registerscreen.dart';
@@ -218,7 +221,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 20),
                                   child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => NewPasswordScreen()),
+                                      );
+                                    },
                                     child: Text(
                                       'Forgot Password ?',
                                       style: TextStyle(
@@ -298,6 +307,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       final bool isEmailVerify =
                                           await loginAuthProvider.loginAcc(
                                               email, password, context);
+                                      LoginResponse login = LoginResponse();
+                                      login.email;
+                                      print(login.email);
                                       if (!isEmailVerify) {
                                         await Future.delayed(
                                             const Duration(seconds: 2));
@@ -317,7 +329,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     OTPVerificationScreen(
-                                                        user: User(
+                                                        email: User(
                                                             email: email))));
 
                                         return;
@@ -358,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => HomePageScreen(
-                                            user: user,
+                                            loginResponse: login
                                           ),
                                         ),
                                       );

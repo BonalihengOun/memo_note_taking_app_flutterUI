@@ -135,7 +135,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => HomePageScreen(
-                                          user: null,
+                                          loginResponse: null,
                                         )));
                           },
                         ),
@@ -833,7 +833,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         PageTransition(
           type: PageTransitionType.fade,
           child: HomePageScreen(
-            user: null,
+            loginResponse: null,
           ),
         ),
       );

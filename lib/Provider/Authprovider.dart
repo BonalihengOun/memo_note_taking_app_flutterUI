@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:memo_note_app/model/LoginResponse.dart';
@@ -7,11 +8,12 @@ import 'package:memo_note_app/model/User.dart';
 
 import 'package:memo_note_app/view/Screen/auth/OTPVerificationScreen.dart';
 import '../utils/share_preferrences.dart';
+import '../view/Screen/auth/login_screen.dart';
 
 
 class AuthProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseURl = 'http://192.168.147.143:8080/api/memo/notes/Auth/';
+  final String _baseURl = 'http://192.168.41.143:8080/api/memo/notes/Auth/';
   bool _isLoading = false;
   String? _errorMessage;
   bool _iscountdownstarted = false;
@@ -46,14 +48,16 @@ class AuthProvider with ChangeNotifier {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => OTPVerificationScreen(user: user)),
+            builder: (context) => OTPVerificationScreen(email: user)),
       );
     }
 
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       final RegisterResponse = User.fromJson(data);
+      print('UserId: ${RegisterResponse.userId}');
       print('Username: ${RegisterResponse.username}');
+      print('email: ${RegisterResponse.email}');
       print(data);
       print('User registration successful!');
       onRegistrationSuccessful(context);
@@ -78,7 +82,9 @@ class AuthProvider with ChangeNotifier {
       if (response.statusCode == 201) {
         final responseBody = jsonDecode(response.body);
         final loginResponse = LoginResponse.fromJson(responseBody);
-        print('Response body: $loginResponse');
+        print('userId:${loginResponse.userId}');
+        print('userName:${loginResponse.username}');
+        print('email:${loginResponse.email}');
         print('accessToken: ${loginResponse.accessToken}');
 
         if (loginResponse.accessToken != null) {
@@ -135,35 +141,6 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // Future<UserDetail?> getUserByEmailAndPassword(
-  //     String email, String password) async {
-  //   try {
-  //     final response = await http.get(
-  //       Uri.parse(
-  //           '${_baseURl}findUserMatchPassword?email=$email&password=$password'),
-  //       headers: <String, String>{
-  //         'Content-Type': 'application/json; charset=UTF-8',
-  //       },
-  //     );
-  //     if (response.statusCode == 404) {
-  //       final jsonResponse = jsonDecode(response.body);
-  //       print(jsonResponse);
-  //       print('Email or Password is Incorrect');
-  //       return jsonResponse;
-  //     } else if (response.statusCode == 200) {
-  //       final jsonResponse = jsonDecode(response.body);
-  //       print(jsonResponse);
-  //       UserDetail user = UserDetail.fromJson(jsonResponse['payload']);
-  //       return user;
-  //     } else {
-  //       throw Exception('Failed to load user data: ${response.statusCode}');
-  //     }
-  //   } catch (error) {
-  //     print('Error: $error');
-  //     return null; // An error occurred
-  //   }
-  // }
 
   Future<bool> isEmailregistered(String email) async {
     try {
@@ -227,4 +204,90 @@ class AuthProvider with ChangeNotifier {
       );
     }
   }
+  // ForgetPassword - Request OTP with error handling and user feedback
+  Future<bool> requestOTP(String email, BuildContext context) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${_baseURl}forget-password/request-otp/$email'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        _errorMessage = response.reasonPhrase ?? 'Failed to request OTP';
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_errorMessage!)),
+        );
+        return false;
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
+      return false;
+    }
+  }
+  // ForgetPassword - Verify OTP and reset password
+  Future<bool> verifyOtpAndResetPassword(
+      String email, String otpCode, String password, String confirmPassword, BuildContext context) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${_baseURl}forget-password/verify-otp/$email/$otpCode'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'password': password,
+          'confirmPassword': confirmPassword,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        final responseBody = json.decode(response.body);
+        _errorMessage = responseBody['message'] ?? 'Failed to verify OTP and reset password';
+        notifyListeners();
+        return false;
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
+      return false;
+    }
+  }
+
+  //Verify OTP forgot password
+  Future<bool> verifyOTPForgotPassword(String otpCode, BuildContext context) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${_baseURl}forget-password/verify-otp/$otpCode'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+        return data; // Assuming the response is a boolean
+      } else {
+        _errorMessage = 'Failed to verify OTP';
+        notifyListeners();
+        print(_errorMessage);
+        return false;
+      }
+    } catch (error) {
+      print(error);
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      return false;
+    }
+  }
+
+
+
+
 }

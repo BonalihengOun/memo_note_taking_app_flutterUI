@@ -3,20 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:memo_note_app/Provider/Authprovider.dart';
 import 'package:memo_note_app/model/User.dart';
+import 'package:memo_note_app/view/Screen/auth/ForgotPassword_Screen.dart';
+import 'package:memo_note_app/view/Screen/auth/NewPasswordScreen.dart';
 import 'package:memo_note_app/view/Screen/auth/login_screen.dart';
 
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
-class OTPVerificationScreen extends StatefulWidget {
+class OTPVerifiForgetPasswordScreen extends StatefulWidget {
   final email;
-  const OTPVerificationScreen({super.key, required this.email});
+  const OTPVerifiForgetPasswordScreen({super.key, required this.email});
 
   @override
-  State<OTPVerificationScreen> createState() => _OTPVerificationScreenState();
+  State<OTPVerifiForgetPasswordScreen> createState() => _OTPVerifiForgetPasswordScreen();
 }
 
-class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
+class _OTPVerifiForgetPasswordScreen extends State<OTPVerifiForgetPasswordScreen> {
   final _otpController = TextEditingController();
   bool _isCountdownStarted = false;
   bool _isResendingOTP = false;
@@ -129,7 +131,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                           ),
                         ),
                         Text(
-                          ' to verify Your Account!',
+                          ' to make this email is your account!',
                           style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'NiraSemi',
@@ -178,7 +180,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         // Check if OTP code is not empty and matches the expected value
                         if (_otpController.text.isNotEmpty) {
                           try {
-                            final isOTPCorrect = await authProvider.verifyOTP(
+                            final isOTPCorrect = await authProvider.verifyOTPForgotPassword(
                                 _otpController.text, context);
                             if (isOTPCorrect) {
                               // Show loading indicator while verifying OTP
@@ -227,7 +229,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                                     ),
                                                     Text('Successfull',style: TextStyle(fontFamily: 'NiraBold',fontSize: 20,color: Colors.green),),
                                                     SizedBox(height: 10),
-                                                    Center(child: Text('Your account has been verify!!!',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.black54),)),
+                                                    Center(child: Text('Please enter new password',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 14,color: Colors.black54),)),
                                                     SizedBox(height: 5),
                                                     Text('Please login to continue',style: TextStyle(fontFamily: 'NiraRegular',fontSize: 12,color: Colors.black54),),
                                                   ],
@@ -260,7 +262,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => LoginScreen()),
+                                    builder: (context) => NewPasswordScreen(
+                                      OTP: _otpController.text,
+                                      email: widget.email,
+                                    )),
                               );
                             } else {
                               // Show error dialog for invalid OTP or expired OTP
@@ -391,7 +396,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                 _isResendingOTP = true;
                               });
                               try {
-                                await authProvider.resendOTP(
+                                await authProvider.requestOTP(
                                     widget.email!, context);
                                 if (!_isCountdownStarted) {
                                   _restartCountdown(); // Restart the countdown timer if it has ended

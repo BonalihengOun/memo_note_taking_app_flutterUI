@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:memo_note_app/Provider/Noteprovider.dart';
 import 'package:memo_note_app/Provider/Tagprovider.dart';
+import 'package:memo_note_app/model/LoginResponse.dart';
 import 'package:memo_note_app/model/User.dart';
 
 import 'package:memo_note_app/model/notePaper.dart';
@@ -17,10 +18,10 @@ import 'Note_detail_screen.dart';
 import 'auth/login_screen.dart';
 
 class HomePageScreen extends StatefulWidget {
-  final User? user;
+  final LoginResponse? loginResponse;
   const HomePageScreen({
     Key? key,
-    required this.user,
+    required this.loginResponse,
   }) : super(key: key);
 
   @override
@@ -96,20 +97,21 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 50, left: 15, right: 15),
-                  child: Container(
-                    child: Image.asset('lib/assets/user.png'),
-                    width: 80,
-                    height: 80,
+                  child: Text(
+                    '${widget.loginResponse?.username}',
+                    style: TextStyle(fontSize: 20),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 50, left: 15, right: 15),
                   child: Text(
-                    '${widget.user?.email}',
+                    '${widget.loginResponse?.email}',
                     style: TextStyle(fontSize: 20),
                   ),
                 ),
                 Container(
+                  margin: EdgeInsets.only(top:   MediaQuery.of(context).size.height *
+                      0.3,),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -118,7 +120,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                           onPressed: () {
                             _logout(context);
                           },
-                          child: Text('Logout'),
+                          child: Text('Logout',style: TextStyle(fontFamily: 'NiraBold',fontSize: 16),),
                         ),
                       ]),
                 ),
@@ -147,7 +149,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         padding: const EdgeInsets.only(left: 8.0),
                         child: IconButton(
                           icon: const Image(
-                            image: AssetImage("lib/assets/user.png"),
+                            image: AssetImage("lib/assets/menu-bar .png"),
                             width: 26,
                             height: 26,
                           ),
@@ -308,14 +310,19 @@ class _HomePageScreenState extends State<HomePageScreen> {
                               : notePapers;
 
                           if (filteredNotePapers.isEmpty) {
-                            return Center(
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 100),
-                                child: Image(
-                                  image:
-                                      AssetImage('lib/assets/Welcome_note.png'),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.7,
+                            return Container(
+                              margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.1),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Image(
+                                      image:
+                                          const AssetImage('lib/assets/Empty.png'),
+                                      width:
+                                          MediaQuery.of(context).size.width * 0.5,
+                                    ),
+                                    Text("Empty Notes",style: TextStyle(fontFamily: 'NiraBold',fontSize: 24,color: Colors.amber ),)
+                                  ],
                                 ),
                               ),
                             );

@@ -1,14 +1,15 @@
+
 class LoginResponse {
-  final String message;
-  final Map<String, dynamic> payload;
-  final String status;
-  final String creationDate;
+  final String? message;
+  final Map<String, dynamic>? payload;
+  final String? status;
+  final String? creationDate;
 
   LoginResponse({
-    required this.message,
-    required this.payload,
-    required this.status,
-    required this.creationDate,
+     this.message,
+     this.payload,
+     this.status,
+     this.creationDate,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,12 @@ class LoginResponse {
     );
   }
 
-  String? get accessToken => payload['accessToken'];
+  int? get userId => payload?['userId'];
+  String? get username => payload?['username'];
+  String? get email => payload?['email'];
+  String? get accessToken => payload?['accessToken'];
+
+
+
 
 }
