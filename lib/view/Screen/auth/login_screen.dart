@@ -225,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) => NewPasswordScreen()),
+                                            builder: (context) => ForgotPassScreen()),
                                       );
                                     },
                                     child: Text(
@@ -304,37 +304,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       final bool loginResult =
                                           await loginAuthProvider.loginAcc(
                                               email, password, context);
-                                      final bool isEmailVerify =
-                                          await loginAuthProvider.loginAcc(
-                                              email, password, context);
+
                                       LoginResponse login = LoginResponse();
                                       login.email;
                                       print(login.email);
-                                      if (!isEmailVerify) {
-                                        await Future.delayed(
-                                            const Duration(seconds: 2));
-                                        Navigator.pop(context);
-                                        showCustomAlertDialog(
-                                          context,
-                                          'Success',
-                                          'Please Verify Your Email',
-                                          'Please check your email and verify your account.',
-                                          Colors.green.shade700,
-                                          imagePath: 'lib/assets/check.png',
-                                        );
-                                        await Future.delayed(
-                                            const Duration(seconds: 2));
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    OTPVerificationScreen(
-                                                        email: User(
-                                                            email: email))));
-
-                                        return;
-                                      }
-
                                       if (!loginResult) {
                                         // Incorrect password
                                         await Future.delayed(

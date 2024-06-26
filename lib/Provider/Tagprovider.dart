@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:memo_note_app/model/TagRequest.dart';
 import 'package:memo_note_app/model/Tag.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,7 @@ import '../utils/share_preferrences.dart';
 
 class TagProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseUrl = 'http://192.168.41.143:8080/api/memo/tags/';
+  final String _baseUrl = 'http://192.168.42.162:8080/api/memo/tags/';
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -137,4 +138,48 @@ class TagProvider with ChangeNotifier {
       throw Exception('Failed to delete Tag: $error');
     }
   }
+  Future<bool> changeNameTag(int id, String newTagName, BuildContext context) async {
+    try {
+      final token = await _prefs.getTokenFromPrefs();
+      if (token == null) {
+        throw Exception('Access token is null');
+      }
+
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      final body = jsonEncode({
+        'tagName': newTagName,
+      });
+
+      final response = await http.put(
+        Uri.parse('$_baseUrl'+'tagId/$id'),
+        headers: headers,
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final responseBody = json.decode(response.body);
+        _errorMessage = responseBody['message'] ?? 'Failed to change tag name';
+        notifyListeners();
+        return false;
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
+      return false;
+    }
+  }
+
+
+
+
+
 }

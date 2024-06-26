@@ -37,7 +37,7 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
             SizedBox(height: 70),
             Container(
               child: Center(
-                child: Image.asset('lib/assets/Forgot password.gif',
+                child: Image.asset('lib/assets/Forgot password.png',
                     width: 230, height: 180),
               ),
             ),

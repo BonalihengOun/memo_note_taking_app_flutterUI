@@ -8,7 +8,7 @@ import '../utils/share_preferrences.dart';
 
 class NoteProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseUrl = 'http://192.168.41.143:8080/api/memo/notes/';
+  final String _baseUrl = 'http://192.168.42.162:8080/api/memo/notes/';
   bool _isLoading = false;
   String? _errorMessage;
 

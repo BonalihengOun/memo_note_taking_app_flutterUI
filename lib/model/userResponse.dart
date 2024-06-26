@@ -1,22 +1,22 @@
 class UserResponse {
-  final int userId;
-  final String username;
-  final String email;
+  final int? userId;
+  final String? name;
+  final String? email;
 
   UserResponse(
-      {required this.userId, required this.username, required this.email});
+      { this.userId,  this.name,  this.email});
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
     return UserResponse(
       userId: json['userId'] ?? 0,
-      username: json['username'] ?? '',
+      name: json['name'] ?? '',
       email: json['email'] ?? '',
     );
   }
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
-      'username': username,
+      'name': name,
       'email': email,
     };
   }

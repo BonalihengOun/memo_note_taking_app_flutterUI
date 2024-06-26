@@ -8,6 +8,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:memo_note_app/Provider/Tagprovider.dart';
+import 'package:memo_note_app/Provider/Tagprovider.dart';
 import 'package:memo_note_app/model/TagRequest.dart';
 import 'package:memo_note_app/model/notePaper.dart';
 import 'package:memo_note_app/model/notepaperRequest.dart';
@@ -20,7 +22,6 @@ import 'package:swipeable_button_view/swipeable_button_view.dart';
 import '../../Provider/Noteprovider.dart';
 import '../../Provider/Tagprovider.dart';
 import 'auth/login_screen.dart';
-import 'package:languagetool_textfield/languagetool_textfield.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final Notepaper? note;
@@ -36,6 +37,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _noteDescriptionController =
       TextEditingController();
+  final TextEditingController _tagName = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _tagController = TextEditingController();
   late Future<List<Tag>> _tagListFuture = Future.value([]);
@@ -95,6 +97,110 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showUpdateTagDialog(BuildContext context, Tag tag) {
+    TextEditingController controller = TextEditingController(text: tag.tagName);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Update Tag',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xff610AA5),
+              fontFamily: 'NiraBold',
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: "Enter new tag name",
+              hintStyle: TextStyle(
+                fontFamily: 'NiraSemi',
+                fontSize: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: BorderSide(color: Colors.blue, width: 2.0),
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            ),
+            style: TextStyle(
+              fontFamily: 'NiraSemi',
+              fontSize: 14,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  fontFamily: 'NiraBold',
+                  fontSize: 14,
+                  color: Colors.red,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(
+                "Update",
+                style: TextStyle(
+                  fontFamily: 'NiraBold',
+                  fontSize: 14,
+                  color: Color(0xff610AA5),
+                ),
+              ),
+              onPressed: () async {
+                final newTagName = controller.text.trim();
+                if (newTagName.isNotEmpty) {
+                  final tagProvider =
+                      Provider.of<TagProvider>(context, listen: false);
+                  bool updated = await tagProvider.changeNameTag(
+                      tag.tagId, newTagName, context);
+                  if (updated) {
+                    _fetchTag(); // Refresh tag list after update
+                    _showSnackbar('Tag updated successfully', Colors.green);
+                  } else {
+                    _showSnackbar('Failed to update tag', Colors.red);
+                  }
+                  Navigator.of(context).pop(); // Close dialog
+                } else {
+                  _showSnackbar('Tag name cannot be empty', Colors.red);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSnackbar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Center(
+            child: Text(
+          message,
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'NiraSemi',
+          ),
+        )),
+        backgroundColor: color,
+      ),
+    );
   }
 
   @override
@@ -188,7 +294,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             ),
                             controller: _titleController,
                             decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(left: 10,),
+                              contentPadding: EdgeInsets.only(
+                                left: 10,
+                              ),
                               border: InputBorder.none,
                               hintText: 'Title your note . . .',
                               hintStyle: TextStyle(
@@ -198,8 +306,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                               ),
                             ),
                             maxLines: 2,
-                            keyboardType:
-                            TextInputType.multiline, // Allow unlimited lines
+                            keyboardType: TextInputType
+                                .multiline, // Allow unlimited lines
                           ),
                         ),
                         Container(
@@ -213,7 +321,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             ),
                             controller: _contentController,
                             decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(left: 10, top: 10),
+                              contentPadding:
+                                  EdgeInsets.only(left: 10, top: 10),
                               border: InputBorder.none,
                               hintText: 'Write Something note . . .',
                               hintStyle: TextStyle(
@@ -224,8 +333,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                               ),
                             ),
                             maxLines: null,
-                            keyboardType:
-                            TextInputType.multiline, // Allow unlimited lines
+                            keyboardType: TextInputType
+                                .multiline, // Allow unlimited lines
                           ),
                         ),
                       ],
@@ -386,34 +495,40 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                         }
                                       });
                                     },
-                                    child: Chip(
-                                      onDeleted: () async {
-                                        final tagProvider =
-                                            Provider.of<TagProvider>(context,
-                                                listen: false);
-                                        bool deleted = await tagProvider
-                                            .deleteTag(tag.tagId.toString());
-                                        if (deleted) {
-                                          _removeTag(tag.tagId);
-                                          _fetchTag();
-                                        }
+                                    child: GestureDetector(
+                                      onLongPress: () {
+                                        _showUpdateTagDialog(context, tag);
                                       },
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      deleteIconColor: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                      label: Text(
-                                        tag.tagName,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      backgroundColor: tagColor,
-                                      labelStyle: TextStyle(
-                                        fontFamily: 'NiraSemi',
-                                        color: isSelected
+                                      child: Chip(
+                                        onDeleted: () async {
+                                          final tagProvider =
+                                              Provider.of<TagProvider>(context,
+                                                  listen: false);
+                                          bool deleted = await tagProvider
+                                              .deleteTag(tag.tagId.toString());
+                                          if (deleted) {
+                                            _removeTag(tag.tagId);
+                                            _fetchTag();
+                                          }
+                                        },
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                        ),
+                                        deleteIconColor: isSelected
                                             ? Colors.white
                                             : Colors.black,
+                                        label: Text(
+                                          tag.tagName,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        backgroundColor: tagColor,
+                                        labelStyle: TextStyle(
+                                          fontFamily: 'NiraSemi',
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -812,18 +927,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
-  void _showSnackbar(String message, Color backgroundColor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Center(
-            child: Text(
-          message,
-          style: TextStyle(fontFamily: 'NiraBold', fontSize: 14),
-        )),
-        backgroundColor: backgroundColor,
-      ),
-    );
-  }
+  // void _showSnackbar(String message, Color backgroundColor) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Center(
+  //           child: Text(
+  //         message,
+  //         style: TextStyle(fontFamily: 'NiraBold', fontSize: 14),
+  //       )),
+  //       backgroundColor: backgroundColor,
+  //     ),
+  //   );
+  // }
 
   void _navigateToHomePage() {
     // Navigate to homepage after updating the note

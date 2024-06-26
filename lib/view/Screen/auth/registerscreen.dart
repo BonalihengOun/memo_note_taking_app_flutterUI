@@ -369,6 +369,7 @@ class _RegisterState extends State<Register> {
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
                                     // If form validation succeeds, create a User object
+                                    final email = _emailController.text;
                                     User user = User(
                                       username: _usernameController.text,
                                       email: _emailController.text,
@@ -384,7 +385,7 @@ class _RegisterState extends State<Register> {
                                       final isEmailRegistered =
                                           await registerProvider
                                               .isEmailregistered(
-                                                  _emailController.text);
+                                              email);
 
                                       if (!isEmailRegistered) {
                                         registerProvider.isLoading = true;

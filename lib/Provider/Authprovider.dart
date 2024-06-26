@@ -5,16 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:memo_note_app/model/LoginResponse.dart';
 import 'package:memo_note_app/model/User.dart';
+import 'package:memo_note_app/model/userResponse.dart';
 
 import 'package:memo_note_app/view/Screen/auth/OTPVerificationScreen.dart';
 import '../utils/share_preferrences.dart';
 import '../view/Screen/auth/login_screen.dart';
 
-
 class AuthProvider with ChangeNotifier {
   final Share_preferences _prefs = Share_preferences();
-  final String _baseURl = 'http://192.168.41.143:8080/api/memo/notes/Auth/';
+  final String _baseURl = 'http://192.168.42.162:8080/api/memo/notes/Auth/';
   bool _isLoading = false;
+  late final String? email;
   String? _errorMessage;
   bool _iscountdownstarted = false;
   bool _registrationSuccessful = false;
@@ -48,10 +49,9 @@ class AuthProvider with ChangeNotifier {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => OTPVerificationScreen(email: user)),
+            builder: (context) => OTPVerificationScreen(email: user.email)),
       );
     }
-
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       final RegisterResponse = User.fromJson(data);
@@ -60,7 +60,9 @@ class AuthProvider with ChangeNotifier {
       print('email: ${RegisterResponse.email}');
       print(data);
       print('User registration successful!');
+
       onRegistrationSuccessful(context);
+
     } else {
       _errorMessage = response.reasonPhrase;
       print('Registration failed: ${response.statusCode}');
@@ -102,12 +104,9 @@ class AuthProvider with ChangeNotifier {
       } else if (response.statusCode == 400) {
         // Handle invalid email
         print('Please Verify your Email, We sent an OTP on your email address');
-        await resendOTP(
-            email, context);
+        await resendOTP(email, context);
         return false; // Invalid email
-      }
-
-      else {
+      } else {
         throw Exception(
             'Login failed: ${response.statusCode}, ${response.reasonPhrase}');
       }
@@ -204,6 +203,7 @@ class AuthProvider with ChangeNotifier {
       );
     }
   }
+
   // ForgetPassword - Request OTP with error handling and user feedback
   Future<bool> requestOTP(String email, BuildContext context) async {
     try {
@@ -231,12 +231,13 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
   }
+
   // ForgetPassword - Verify OTP and reset password
-  Future<bool> verifyOtpAndResetPassword(
-      String email, String otpCode, String password, String confirmPassword, BuildContext context) async {
+  Future<bool> verifyOtpAndResetPassword(String email,
+      String password, String confirmPassword, BuildContext context) async {
     try {
       final response = await http.put(
-        Uri.parse('${_baseURl}forget-password/verify-otp/$email/$otpCode'),
+        Uri.parse('${_baseURl}forget-password/verify-otp/$email'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'password': password,
@@ -247,9 +248,6 @@ class AuthProvider with ChangeNotifier {
       if (response.statusCode == 201) {
         return true;
       } else {
-        final responseBody = json.decode(response.body);
-        _errorMessage = responseBody['message'] ?? 'Failed to verify OTP and reset password';
-        notifyListeners();
         return false;
       }
     } catch (error) {
@@ -263,7 +261,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   //Verify OTP forgot password
-  Future<bool> verifyOTPForgotPassword(String otpCode, BuildContext context) async {
+  Future<bool> verifyOTPForgotPassword(
+      String otpCode, BuildContext context) async {
     try {
       final response = await http.get(
         Uri.parse('${_baseURl}forget-password/verify-otp/$otpCode'),
@@ -287,7 +286,103 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // User change Name
+  Future<bool> changeUsername(String newUsername, BuildContext context) async {
+    try {
+      final token = await _prefs.getTokenFromPrefs(); // Assuming _prefs is already defined and initialized
+      if (token == null) {
+        throw Exception('Access token is null');
+      }
+      final response = await http.put(
+        Uri.parse('${_baseURl}changeUsername/$newUsername'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        final responseBody = json.decode(response.body);
+        _errorMessage = responseBody['message'] ?? 'Failed to change username';
+        notifyListeners();
+        return false;
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
+      return false;
+    }
+  }
 
+  //Reset Password
+  Future<bool> resetPassword(String? email, String password, String confirmPassword, BuildContext context) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${_baseURl}reset-password/$email'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+          'confirmPassword': confirmPassword,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        final responseBody = json.decode(response.body);
+        _errorMessage = responseBody['message'] ?? 'Failed to reset password';
+        notifyListeners();
+        return false;
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage!)),
+      );
+      return false;
+    }
+  }
+
+  // Get Username and Email
+  Future<UserResponse> getUserDetails() async {
+    try {
+      final token = await _prefs.getTokenFromPrefs(); // Assuming _prefs is already defined and initialized
+      if (token == null) {
+        throw Exception('Access token is null');
+      }
+      final response = await http.get(
+        Uri.parse('${_baseURl}getUserDetails'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final userResponse = UserResponse.fromJson(responseBody);
+        print('userId: ${userResponse.userId}');
+        print('name: ${userResponse.name}');
+        print('email: ${userResponse.email}');
+        notifyListeners();
+        return userResponse;
+      } else {
+        throw Exception('Failed to get user data: ${response.statusCode}');
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      notifyListeners();
+      throw error;
+    }
+  }
 
 
 }

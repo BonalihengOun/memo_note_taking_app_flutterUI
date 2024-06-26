@@ -263,7 +263,6 @@ class _OTPVerifiForgetPasswordScreen extends State<OTPVerifiForgetPasswordScreen
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => NewPasswordScreen(
-                                      OTP: _otpController.text,
                                       email: widget.email,
                                     )),
                               );
@@ -336,10 +335,6 @@ class _OTPVerifiForgetPasswordScreen extends State<OTPVerifiForgetPasswordScreen
                               Navigator.pop(context);
                             }
                           } catch (error) {
-                            // Handle error during OTP verification
-                            if (kDebugMode) {
-                              print(error);
-                            }
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
